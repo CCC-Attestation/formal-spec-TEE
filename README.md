@@ -28,6 +28,7 @@ If you are around on any of the following venues of upcoming talks on the projec
 
 | Event/Host | Venue | Date | Funding | Slides |
 | --- | --- | --- | --- | --- |
+| [IEEE Symposium on Security and Privacy (SnP)](https://sp2023.ieee-security.org/index.html) | San Francisco, USA | 22-24 May, 2023 | Looking for sponsors |  |
 | University of Edinburgh, Heriot-Watt University and University of Stirling | Edinburgh, UK | 14-20 May, 2023 | [EuroProofNet](https://europroofnet.github.io/) | |
 | [2023 OCP Regional Summit](https://2023ocpregional.fnvirtual.app/) | Prague, Czech Republic | 19-20 April, 2023 | [CPEC](https://www.perspicuous-computing.science/) | [slides](https://www.researchgate.net/publication/370131511_Presentation_Systemization_of_Knowledge_Attestation_in_Confidential_Computing) |
 | [NSA Symposium on Hot Topics in the Science of Security (HotSoS)](https://cps-vo.org/group/hotsos) | Virtual | 3-5 April, 2023 | - | [slides](https://www.researchgate.net/publication/369794583_Presentation_SoK_Attestation_in_Confidential_Computing) |
