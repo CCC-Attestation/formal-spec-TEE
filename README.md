@@ -21,7 +21,7 @@ The main challenge is the extraction of the protocol to be formalized, as the ve
 We use state-of-the-art symbolic security analysis tool [ProVerif](https://ieeexplore.ieee.org/document/9833653) for the specification of the protocols. 
 
 ## Progress so far 
-[This draft](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) co-authored by Thomas Fossati and Simon Frost presents the progress so far. We would like to thank Nikolaus Thümmel, Shale Xiong, and Ante Derek for insightful discussions and helpful feedback.
+[This draft](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) co-authored by Thomas Fossati and Simon Frost presents the progress so far. We would like to thank Nikolaus Thümmel (Scontain), Shale Xiong (Arm), Ante Derek (Univeristy of Zagreb) and Jiewen Yao (Intel) for insightful discussions and helpful feedback.
 
 ## Recent and Upcoming Talks
 If you are around on any of the following venues of upcoming talks on the project, you are very welcome to join. 
