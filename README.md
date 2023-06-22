@@ -26,16 +26,24 @@ The symbolic security analysis has the following inherent limitations:
 2. Side-channels are out of scope. 
 
 ## Progress so far 
-[This draft](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) co-authored by Thomas Fossati and Simon Frost presents the progress so far. We would like to thank Nikolaus Thümmel (Scontain), Shale Xiong (Arm), Ante Derek (Univeristy of Zagreb) and Jiewen Yao (Intel) for insightful discussions and helpful feedback.
+[This draft](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) co-authored by Thomas Fossati and Simon Frost presents the progress so far. 
+
+## Acknowledgments
+We would like to thank the following for insightful discussions and helpful feedback.
+- Nikolaus Thümmel (Scontain)
+- Shale Xiong (Arm)
+- Ante Derek (Univeristy of Zagreb)
+- Jiewen Yao (Intel)
 
 ## Recent and Upcoming Talks
-If you are around on any of the following venues of upcoming talks on the project, you are very welcome to join. 
+If you are around on any of the following venues of upcoming talks (in reverse chronological order) on the project, you are very welcome to join. 
 
 | Event/Host | Venue | Date | Funding | Material |
 | --- | --- | --- | --- | --- |
 | [Highlights of Logic, Games and Automata](https://highlights-conference.org/2023/) | Kassel, Germany | 24-28 July, 2023 |  |  |
+| [Output](https://output-dd.de/) | Dresden, Germany | 29 June, 2023 | - |  |
 | Invited talk at [Formal Methods for Security Network](https://fmsec.github.io/fmsec/) and [Cyber Security & Privacy Seminar Series](https://uk-sps.org/seminars/)| Virtual | 28 June, 2023 | - |  |
-| [16th Interaction and Concurrency Experience](https://www.discotec.org/2023/ice) | Lisbon, Portugal | 19 June, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
+| [16th Interaction and Concurrency Experience](https://www.discotec.org/2023/ice) | Lisbon, Portugal | 19 June, 2023 | [CPEC](https://www.perspicuous-computing.science/) | [slides](https://www.researchgate.net/publication/371762135_Presentation_Comprehensive_Specification_and_Formal_Analysis_of_Attestation_Mechanisms_in_Confidential_Computing) |
 | [OCP Security](https://www.opencompute.org/wiki/Security) | Virtual | 13 June, 2023 | - | [slides](https://www.researchgate.net/publication/371562452_Presentation_Specification_and_Formal_Verification_of_Attestation_Mechanisms_in_Confidential_Computing) |
 | CCC SIG Progress update| Virtual | 6 June, 2023 | - | [slides](https://www.researchgate.net/publication/371339782_Presentation_Formal_Specification_of_Attestation_Mechanisms_in_Confidential_Computing_Progress_Update) [video](https://youtu.be/CeqfKEP8W4U?list=PLmfkUJc39uMhZsNGmpx-qD-uCoQyMglIp&t=1048)|
 | [IEEE Symposium on Security and Privacy (SnP)](https://sp2023.ieee-security.org/index.html) | San Francisco, USA | 22-24 May, 2023 | [TBTL](https://tbtl.com/), [Flashbots](https://www.flashbots.net/) and [konVera](https://konvera.io/)| [slides](https://www.researchgate.net/publication/371034944_Presentation_Comprehensive_Specification_and_Formal_Analysis_of_Attestation_Mechanisms_in_Confidential_Computing) |
