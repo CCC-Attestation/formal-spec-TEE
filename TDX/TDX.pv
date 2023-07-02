@@ -12,6 +12,8 @@ https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidenti
 (* proverif -graph <subfolderNameForResults> TDX.pv *)
 (* subfolder will contain the traces in .dot as well as .PDF *)
 
+(* To run in interactive mode: *)
+(* proverif_interact TDX.pv *)
 
 (* Informal description of the protocol:
 **********************************************************************
@@ -20,9 +22,8 @@ Assumptions:
   a. secure channel between TD and TDX Module (by SoC)
   b. secure channel between TDX Module and CPU Hardware (by SoC)
   c. secure channel between TD QE and CPU Hardware (by SoC)
-  d. secure channel between PCE and TD QE (TODO: remove this assumption)
-  e. Adversary has full control to create fake TDs and get its Quote. To model this, all Claims with corresponding Reference Values are obtained as input from adversary.
-  f. secure channel between PCE and CPU Hardware (by SoC)
+  d. secure channel between PCE and CPU Hardware (by SoC)
+  e. Adversary has full control to create fake TDs and get its Quote. To model this, all Claims with corresponding Reference Values are obtained as input from adversary. 
 
 **********************************************************************
 Naming convention: 
@@ -91,6 +92,11 @@ Quote = TD QUOTE
   ICAcert
   rootcert
 
+QEReport
+  QEReportBody = QE Report Body 
+    QErdata = sha256(pub(AK)||QEauthData)
+  keyID = Key ID
+  QEmac = MAC over QE Report Body using RK
 **********************************************************************
 Initialization Steps: 
 **********************************************************************
@@ -124,7 +130,8 @@ I6. PCE: Verify QEReport based on policy:
             QEmac from QEReport as received in step I3
             QEReportBody from QEReport as received in step I3
             RK as received in step I5
-    I6ii. check attEnc.PROVISIONKEY == 1 && attEnc.DEBUG == 0 (TODO: to be implemented)
+    I6ii. Check QErdata hash matches 
+    I6iii.check attEnc.PROVISIONKEY == 1 && attEnc.DEBUG == 0 (TODO: to be implemented)
 If verified, then proceed
 I7. PCE -> QE: AKcert = pub(AK) || QEReportBody || PCKsig || QEauthData
     where 
@@ -323,6 +330,7 @@ fun kdfRK(bitstring,bitstring):mac_key.
 (* Declarations of constants and free (vs. bound) names *)
 (**********************************************************************)
 free c: channel. (*Public channel*)
+free c_PCE_QE:channel.
 free c_PCE_Ver: channel [private]. (*Private channel*)
 free sec:bitstring [private].
 
@@ -332,7 +340,7 @@ free tdiClaimsRef:bitstring.
 free tcbiClaimsRef:bitstring.
 (* set traceDisplay = long.  Display full trace *)
 (* set verboseClauses = explained. *)
-
+set reconstructTrace = 100. (* default value of 4 led to cannot be proved for some properties; see ProVerif manual page 111 *)
 (**********************************************************************)
 (* Other declarations, e.g., events *)
 (**********************************************************************)
@@ -343,13 +351,15 @@ event test4.
 event test5.
 event test6(bitstring).
 event test7(bitstring,bitstring).
+event test8.
 event decSuccess.
 event CPUsentSMR(bitstring,bitstring).
 event TDXMsentTDR(bitstring).
 event QuoteVerified(bitstring,bitstring,bitstring).
 event TDidentity(pubkey). 
 event VerIdentity(pubkey). 
-
+event AKverified(spkey). 
+event AKsent(spkey).
 (********************************************************)
 (* Queries *)
 (********************************************************)
@@ -359,21 +369,28 @@ event VerIdentity(pubkey).
 (********************************************************)
 (* query event (test).
 query event (test2).
-query event (test3).
-query event (test4).
 query event (test5).
 query event (decSuccess). *)
+(* query event (test3).
+query event (test4).
+query event (test8). *)
+
+(* step I0 *)
+query pubAK: spkey; 
+event (AKverified(pubAK)).
+
 (*Step 6*)
-query tcbiClaims:bitstring,rdata:bitstring; event (CPUsentSMR(tcbiClaims,rdata)).
+query tcbiClaims:bitstring,rdata:bitstring; 
+event (CPUsentSMR(tcbiClaims,rdata)).
 
 (*Step 8*)
 query tdiClaims:bitstring; 
 event (TDXMsentTDR(tdiClaims)).
 
 (* query tdiClaims:bitstring; 
-event (test6(tdiClaims)).
+event (test6(tdiClaims)). *)
 
-query tcbiClaims:bitstring,rdata:bitstring;
+(* query tcbiClaims:bitstring,rdata:bitstring;
 event (test7(tcbiClaims,rdata)). *)
 
 (*Step 19*)
@@ -385,35 +402,49 @@ event (QuoteVerified(tcbiClaims,tdiClaims,rdata)).
 (* Declaration of the security properties *)
 (**********************************************************************)
 (* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
-event (test6(tdiClaims)) ==> event (TDXMsentTDR(tdiClaims)).
+event (test6(tdiClaims)) ==> event (TDXMsentTDR(tdiClaims)). *)
 
-query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
+(* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
 event (test7(tcbiClaims,rdata)) ==> event (CPUsentSMR(tcbiClaims,rdata)). *)
 
 
 (********************************************************)
 (* Integrity Queries *)
 (********************************************************)
+(* Integrity of pubAK (Init phase) *)
+query pubAK: spkey; 
+event (AKverified(pubAK)) ==> event (AKsent(pubAK)).
+
+
+(* Integrtiy of tcbiClaims and rdata: step 6-19 *)
+(* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
+event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
+event    (CPUsentSMR(tcbiClaims,rdata)). *)
+
 query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
 event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
 inj-event    (CPUsentSMR(tcbiClaims,rdata)).
 
-(* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
-event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
-inj-event    (CPUsentSMR(tcbiClaims,rdata)). *)
-
 (*simplified query: integrity of tdiClaims: step 8-19*)
+(* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
+event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
+event (TDXMsentTDR(tdiClaims)). *)
+
 query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
 event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
 inj-event (TDXMsentTDR(tdiClaims)).
 
-(* query tcbiClaims:bitstring,tdiClaims:bitstring,rdata:bitstring;
-event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
-inj-event (TDXMsentTDR(tdiClaims)). *)
-
 (********************************************************)
 (* Authentication Queries *)
 (********************************************************)
+(* Authentication of TD QE (Init phase) *)
+query pubAK: spkey, pubAK_PCE:spkey;
+(event(AKverified(pubAK_PCE)) &&
+  event(AKsent(pubAK))) ==>
+(pubAK_PCE = pubAK).
+
+
+(* Authentication of TD (Attestation protocol phase) *)
   query pubTDK: pubkey, pubTDK_Ver:pubkey;
   (event(TDidentity(pubTDK)) &&
    event(VerIdentity(pubTDK_Ver))) ==>
@@ -426,14 +457,19 @@ query attacker(sec).
 (**********************************************************************)
 (* Declarations of the processes for each role. *)
 (**********************************************************************)
-let PCE(c_PCE_QE:channel,c_PCE_CPU:channel,PCK:sskey) = 
+let PCE(c_PCE_CPU:channel,PCK:sskey) = 
   (* out(c_PCE_main, PCK); pass to main *)
 
-  in(c_PCE_QE, (pubAK_PCE:spkey,QEReportBody_PCE:bitstring,keyID_PCE:bitstring,QEmac_PCE:bitstring,QEauthData_PCE:bitstring));  (*Step I3 Obtain pub(AK) via secure channel for certification *)
-  out(c_PCE_CPU,true);  (*Step I4*)
+  in(c_PCE_QE, (pubAK_PCE:spkey,CPUSVN_PCE:nat,misc_PCE:bitstring,cetAtt_PCE:bitstring,res6_PCE:bitstring,extprodid_PCE:bitstring,attEnc_PCE:bitstring,mrEnc_PCE:bitstring,res7_PCE:bitstring,mrSigner_PCE:bitstring,res8_PCE:bitstring,config_PCE:bitstring,prodid_PCE:bitstring,QESVN_PCE:nat,confSVN_PCE:nat,res9_PCE:bitstring,famID_PCE:bitstring,QErdata_PCE:hash,keyID_PCE:bitstring,QEmac_PCE:bitstring,QEauthData_PCE:bitstring));  (*Step I3 Obtain pub(AK) for certification *)
+  (* out(c_PCE_CPU,true);  Step I4 *)
   in (c_PCE_CPU,RK:mac_key); (*Step I5*)
-  if QEmac_PCE = hmac_SHA256_ideal(RK,QEReportBody_PCE) then (*Step 16: received MAC = computed MAC?*)  
+  let QEReportBody_PCE = (CPUSVN_PCE,misc_PCE,cetAtt_PCE,res6_PCE,extprodid_PCE,attEnc_PCE,mrEnc_PCE,res7_PCE,mrSigner_PCE,res8_PCE,config_PCE,prodid_PCE,QESVN_PCE,confSVN_PCE,res9_PCE,famID_PCE,QErdata_PCE) in
+  if QEmac_PCE = hmac_SHA256_ideal(RK,QEReportBody_PCE) then (*Step I6: received MAC = computed MAC?*)  
+  let QErdataPrehash = (pubAK_PCE,QEauthData_PCE) in (*for Step I6ii*)
+  let QErdata = hash_ideal(QErdataPrehash) in (*for Step I6ii*)
+  if QErdata_PCE = QErdata then (*Step I6ii: received rdata = computed rdata?*)  
   (* let PCKsig = sign(PCK,spkey2bs(pubAK_PCE)) in  Step I6 type conversion *)
+  event AKverified(pubAK_PCE);
   let PCKsig = sign(PCK,QEReportBody_PCE) in
   (*out(c_PCE_QE, (pubAK_PCE,PCKsig)); Step I7 AK cert*)
   let AKcert = (pubAK_PCE,QEReportBody_PCE,PCKsig,QEauthData_PCE) in 
@@ -441,9 +477,10 @@ let PCE(c_PCE_QE:channel,c_PCE_CPU:channel,PCK:sskey) =
   out(c_PCE_QE, AKcert).  (*Step I7 AK cert*)
 
 
-let QEinit(c_PCE_QE,c_QE_CPU,c_QE_main:channel,PCEinfo:bitstring) =
+let QEinit(c_QE_CPU,c_QE_main:channel,PCEinfo:bitstring) =
   new AK:sskey;  (*Step I0 Note: generate here inside init process because used throughout*)
   let pubAK = spk(AK) in  (*Public part of attestation key*)
+  event AKsent(pubAK);
   out(c, pubAK); (*Give public key to adversary*)
   new QEauthData:bitstring;
   let QErdataPrehash = (pubAK,QEauthData) in (*for Step I1*)
@@ -454,7 +491,7 @@ let QEinit(c_PCE_QE,c_QE_CPU,c_QE_main:channel,PCEinfo:bitstring) =
 
   in (c_QE_CPU,(QEReportBody_QE:bitstring,keyID_QE:bitstring,QEmac_QE:bitstring));  (*Step I2*)
   (* let QEReport = (QEReportBody_QE,keyID_QE,QEmac_QE) in    *)
-  event test3;
+  (* event test3; *)
   out(c_PCE_QE, (pubAK,QEReportBody_QE,keyID_QE,QEmac_QE,QEauthData)); (*Step I3 Send public key for certification*)  
 
   (* in (c_PCE_QE, (pubAK_QE:spkey,PCKsig_QE:bitstring)); Step I7 AK cert *)
@@ -488,8 +525,8 @@ let CPUinit(c_QE_CPU,c_PCE_CPU:channel,PCEinfo:bitstring) =
   event test2;
   out (c_QE_CPU,QEReport);  (*Step I2*)
 
-  in (c_PCE_CPU,request:bool); (*Step I4*)
-  if request = true then 
+  (* in (c_PCE_CPU,request:bool); (*Step I4*)
+  if request = true then  *)
   event test5;
   (*Request came from PCE, so the key here is generated for PCE*)
   let RKtarget = kdfRK(keyID,PCEinfo) in 
@@ -511,7 +548,7 @@ let QE(c_QE_CPU:channel,AK:sskey,AKcert:bitstring,PCKcert:bitstring,ICAcert:bits
   (*Step 12-14: Check the mac of received rms, i.e., if mac_QE = hmac_SHA256_ideal(MK,rmsBody_QE)*)
   in (c_QE_CPU,result:bool); (*Step 14*)
   if result = true then (*for Step 15*)
-  event test6(tdiClaims_QE);
+  (* event test6(tdiClaims_QE); *)
   event test7(tcbiClaims_QE,rdata_QE);  
   (* let smr_QE = (rtyp_QE,res1_QE,csvn_QE,tcbh_QE,tdih_QE,rdata_QE,res2_QE,mac_QE,tcbi_QE) in  *)
   (* let smr_QE = (rms_QE,tcbi_QE) in     equivalent to above but does not work: explore*)
@@ -600,8 +637,10 @@ let Verifier(pubIRK:spkey) =
   let QErdata_comp_prehash = (pubAK_Ver,QEauthData_Ver) in (* for Step 19b: QErdata prehash *)
   let QErdata_comp = hash_ideal(QErdata_comp_prehash) in (* for Step 19b: computed QErdata *)
   if (QErdata_Ver = QErdata_comp) then     (* Step 19b: received = computed? *)
+  event test8;    
+  event test6(tdiClaims_Ver);
   if verify(pubAK_Ver,(QuoteHeader_Ver,QuoteBody_Ver),AKsig_Ver) = true then (*Step 19a: verify authenticity of TD Quote*)
-  (* event test3; *)
+  event test3;
   let rdata_comp_prehash = (pubTDK_Ver,challenge) in (* for Step 19b: rdata prehash *)
   let rdata_comp = hash_ideal(rdata_comp_prehash) in (* for Step 19b: computed rdata *)
   if (rdata_Ver = hash2bs(rdata_comp)) then     (* Step 19b: freshness and public key check *)
@@ -654,18 +693,19 @@ process
   let PCAKsig = sign(PCAK,spkey2bs(pubPCK)) in
   let PCKcert = (pubPCK,PCAKsig) in 
   out(c, PCKcert); (*give PCKcert to adversary*)
-  (* out(c, PCK); When PCE is untrusted, leak PCK to adversary *)
+  (*When PCE is untrusted, leak PCK to adversary *)
+  (* out(c, PCK); *)
 
   new c_QE_CPUinit: channel; (*secure channel; enforced by SoC*)
   (* new c_QE_CPUinit2: channel; secure channel; enforced by SoC *)
-  new c_PCE_QEinit:channel; (*Private channel*) 
+  (* new c_PCE_QEinit:channel; Private channel  *)
   new c_PCE_CPUinit: channel; (*Private channel*)     
   new c_QE_main: channel; (*Private channel*)
 
   new PCEinfo:bitstring; (*To implement TargetInfo*)
 
-  PCE(c_PCE_QEinit,c_PCE_CPUinit,PCK) | 
-  QEinit(c_PCE_QEinit,c_QE_CPUinit,c_QE_main,PCEinfo) |  
+  PCE(c_PCE_CPUinit,PCK) | 
+  QEinit(c_QE_CPUinit,c_QE_main,PCEinfo) |  
   CPUinit(c_QE_CPUinit,c_PCE_CPUinit,PCEinfo) |
   in(c_QE_main, (AK:sskey,AKcert:bitstring));
 
@@ -675,7 +715,7 @@ process
 
 
   (*The trace will have the processes in the following order*)
-  ( ! ( new c_QE_CPU:channel; new c_TDX_CPU:channel; new c_TD_TDX:channel;  
+ ( ! ( new c_QE_CPU:channel; new c_TDX_CPU:channel; new c_TD_TDX:channel;  
       ( QE(c_QE_CPU,AK,AKcert,PCKcert,ICAcert,rootcert) |  TD(c_TD_TDX,TDK) | 
       TDXModule(c_TD_TDX,c_TDX_CPU) | CPUHardware(c_QE_CPU,c_TDX_CPU,MK)  ) ) |
   (!Verifier(spk(IRK))) )
