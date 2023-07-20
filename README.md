@@ -40,7 +40,7 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 
 | Event/Host | Venue | Date | Funding | Material |
 | --- | --- | --- | --- | --- |
-| [Highlights of Logic, Games and Automata](https://highlights-conference.org/2023/) | Kassel, Germany | 24-28 July, 2023 |  |  |
+| [Highlights of Logic, Games and Automata](https://highlights-conference.org/2023/) | Kassel, Germany | 24-28 July, 2023 | [Secretarium](https://secretarium.com/) |  |
 | [Output](https://output-dd.de/) | Dresden, Germany | 29 June, 2023 | - | [slides](https://www.researchgate.net/publication/371948775_Presentation_Comprehensive_Specification_and_Formal_Analysis_of_Attestation_Mechanisms_in_Confidential_Computing) |
 | Invited talk at [Formal Methods for Security Network](https://fmsec.github.io/fmsec/) and [Cyber Security & Privacy Seminar Series](https://uk-sps.org/seminars/)| Virtual | 28 June, 2023 | - | [slides](https://www.researchgate.net/publication/371936296_Comprehensive_Specification_and_Formal_Analysis_ofAttestation_Mechanisms_in_Confidential_Computing) [video](https://www.youtube.com/watch?v=ZS_9Hs4V2WE&ab_channel=UK-SPS) |
 | [16th Interaction and Concurrency Experience](https://www.discotec.org/2023/ice) | Lisbon, Portugal | 19 June, 2023 | [CPEC](https://www.perspicuous-computing.science/) | [slides](https://www.researchgate.net/publication/371762135_Presentation_Comprehensive_Specification_and_Formal_Analysis_of_Attestation_Mechanisms_in_Confidential_Computing) |
