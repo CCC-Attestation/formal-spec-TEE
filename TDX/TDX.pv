@@ -38,15 +38,44 @@ Naming convention:
   pubYY or pub(YY) = Public part of key YY
   YY key-pair = both private and public parts 
 
-Roles: PCE (PCK) || QE || TD || TDX Module || CPU HW (MK) || Verifier (pubIRK)
-where preconfigured keys are shown in parenthesis
+Roles: PCE (PCK) | QE | TD | TDX Module | CPU HW (MK) | Verifier (pubIRK)
+where | represents parallel composition (in contrast to || which is used for concatenation)
+  and preconfigured keys are shown in parenthesis
 
 Fields marked as "user-defined input" are user-defined.
 
 **********************************************************************
 Mapping for code symbols <-> terminology in Intel specs
 **********************************************************************
+Formatting: 2-space indentation represents sub-fields/sub-data structures
 *Local Evidence*
+* QE-PCE LA (init phase) *
+QEReport = TDQE REPORT [source: Intel® 64 and IA-32 Architectures Software Developer's Manual, Sec. 35.16, Page 35-16 (4266), Vol. 3D (March 2023)]
+  QEReportBody = QE Report Body
+    CPUSVN = CPUSVN (This can be higher than the one in PCKcert; Intel does not issue PCKcert for all)
+    misc = MISCSELECT
+    cetAtt = CET_ATTRIBUTES
+    res6 = RESERVED
+    extprodid = ISVEXTNPRODID
+    attEnc = ATTRIBUTES (modeling only the following 2 security-relevant flags)
+      provKeyFlag = PROVISIONKEY
+      debugFlag = DEBUG
+    mrEnc = MRENCLAVE
+    res7 = RESERVED
+    mrSigner = MRSIGNER
+    res8 = RESERVED
+    config = CONFIGID
+    prodid = ISVPRODID
+    QESVN = ISVSVN
+    confSVN = CONFIGSVN
+    res9 = RESERVED
+    famID = ISVFAMILYID
+    QErdata = REPORTDATA 
+  keyID = KEYID
+  QEmac = MAC
+
+
+* TD QE-TD LA (attestation protocol phase) *
 tdr = TDREPORT_STRUCT [source: Intel Trust Domain Extensions (Intel TDX) Module Architecture Application Binary Interface (ABI) Reference Specification]
   smr = SEAMREPORT [source: Intel Trust Domain CPU Architectural Extensions (May 2021)]
     rms = REPORTMACSTRUCT
@@ -74,7 +103,7 @@ tdr = TDREPORT_STRUCT [source: Intel Trust Domain Extensions (Intel TDX) Module 
     mro = MROWNER
     mroc = MROWNERCONFIG
     rtmr = RTMR
-    TODO = SERVTD_HASH
+    TODO = SERVTD_HASH (only for v1.5 feature; both local and remote attestation; exact value match with Ref Value)
     res = RESERVED
 
 *Remote Evidence*
@@ -88,12 +117,12 @@ Quote = TD QUOTE
     QE Vendor ID
     User Data
   QuoteBody = TD Quote Body [source: Intel ® Trust Domain Extensions Data Center Attestation Primitives ( Intel ® TDX DCAP ): Quote Generation Library and Quote Verification Library, Rev. 0.6, February 2023]
-    tcbiClaims
+    tcbiClaims [for artifacts only]
       TDXTCBSVN = TEE_TCB_SVN
       mrs = MRSEAM
       mrss = MRSIGNERSEAM
       att = SEAMATTRIBUTES
-    tdiClaims
+    tdiClaims [for artifacts only]
       tdatt = TDATTRIBUTES (modeling only the following 2 security-relevant flags)
         tudFlag = TD Under Debug flags (TUD)
         secFlag = SEC (SEPT_VE_DISABLE, PKS, KL)
@@ -118,9 +147,9 @@ Quote = TD QUOTE
     https://api.trustedservices.intel.com/documents/Intel_SGX_PCK_Certificate_CRL_Spec-1.5.pdf]
     pubPCK
     ppid = PPID 
-    sgxtcbcomp = SGX TCB Comp 01-16
+    sgxTcbComp = SGX TCB Comp 01-16
     PCESVN = PCESVN 
-    TODO = CPUSVN (Note: CPUSVN also in QEReportBody)
+    TODO = CPUSVN (Note: CPUSVN also in AKcert.QEReportBody)
     pceid = PCEID 
     fmspc = FMSPC 
     piid = PIID 
@@ -132,29 +161,6 @@ Quote = TD QUOTE
     pubIRK
     IRKselfsig
 
-QEReport = TDQE REPORT [source: Intel® 64 and IA-32 Architectures Software Developer's Manual, Sec. 35.16, Page 35-16 (4266), Vol. 3D (March 2023)]
-  QEReportBody = QE Report Body 
-    CPUSVN = CPUSVN (This can be higher than the one in PCKcert; Intel does not issue PCKcert for all)
-    misc = MISCSELECT
-    cetAtt = CET_ATTRIBUTES
-    res6 = RESERVED
-    extprodid = ISVEXTNPRODID
-    attEnc = ATTRIBUTES (modeling only the following 2 security-relevant flags)
-      provKeyFlag = PROVISIONKEY
-      debugFlag = DEBUG
-    mrEnc = MRENCLAVE
-    res7 = RESERVED
-    mrSigner = MRSIGNER
-    res8 = RESERVED
-    config = CONFIGID
-    prodid = ISVPRODID
-    QESVN = ISVSVN
-    confSVN = CONFIGSVN
-    res9 = RESERVED
-    famID = ISVFAMILYID
-    QErdata = REPORTDATA 
-  keyID = KEYID
-  QEmac = MAC
 **********************************************************************
 Initialization Steps (AK certification): 
 **********************************************************************
@@ -284,7 +290,7 @@ if true then continue
     where 
       QuoteHeader, QuoteBody and AKsig as generated in step 15 
       AKcert as received in initialization step I7
-      PCKcert = pubPCK || sgxtcbcomp || PCESVN || PCAKsig 
+      PCKcert = pubPCK || sgxTcbComp || PCESVN || PCAKsig 
       ICAcert = pubPCAK || IRKsig
       rootcert = pubIRK || IRKselfsig
 17. VMM -> TD: Quote 
@@ -301,21 +307,22 @@ if true then continue
          i.e., check received QErdata = computed QErdata?
          i.e., QErdata = sha256(pubAK||QEauthDataRef) || zeroPadRef?
             QErdata as received in Step 18
-    19d. Verify claims of TD QE (in AKcert) against Reference Values based upon policy 
-         based on https://api.portal.trustedservices.intel.com/documentation#pcs-enclave-identity-v4
-          19di.  Verify measurements (mrEnc) of TD QE = Reference Value of mrEnc
-          19dii. Verify hash of ID (mrSigner) of TD QE = Reference Value of mrSigner 
-          19diii.Verify prodid of TD QE = Reference Value of prodid (always go together with 19dii)
-          19div. Apply Reference miscMask (binary mask) to misc field in AKcert. 
-                 Verify if miscMask & misc = Reference Value of misc (TODO) (SSA Frame extended feature set; SECS.MISCSELECT settings)
-          19dv.  Apply Reference attEncMask (binary mask) to attEnc field in AKcert. 
-                 Verify if attEncMask & attEnc = Reference Value of attEnc 
-                 modeled only security-relevant checks: attEnc.PROVISIONKEY == 1 && attEnc.DEBUG == 0?
-          19dvi. Verify received QESVN (in AKcert) >= Reference Value of QESVN 
-    19e. Verify authenticity of QuoteHeader and QuoteBody using pubAK in AKcert
-    19f. Verify integrity of pubTDK in QuoteBody and freshness of Quote
+            zeroPadRef symbolically represents 32 bytes of 0x00
+    19d. Verify authenticity of QuoteHeader and QuoteBody using pubAK in AKcert
+    19e. Verify integrity of pubTDK in QuoteBody and freshness of Quote
          i.e., check received rdata = computed rdata? [user-defined input, so match the format with sender side]
             rdata as received in Step 18
+    19f. Verify claims of TD QE (in AKcert) against Reference Values based upon policy (TODO: Check signatures before using; clarify signature chain)
+         based on https://api.portal.trustedservices.intel.com/documentation#pcs-enclave-identity-v4
+          19fi.  Verify measurements (mrEnc) of TD QE = Reference Value of mrEnc (TODO: does not exist in implementation)
+          19fii. Verify hash of ID (mrSigner) of TD QE = Reference Value of mrSigner 
+          19fiii.Verify prodid of TD QE = Reference Value of prodid (always go together with 19dii)
+          19fiv. Apply Reference miscMask (binary mask) to misc field in AKcert. 
+                 Verify if miscMask & misc = Reference Value of misc (TODO: find important bits here) (SSA Frame extended feature set; SECS.MISCSELECT settings)
+          19fv.  Apply Reference attEncMask (binary mask) to attEnc field in AKcert. 
+                 Verify if attEncMask & attEnc = Reference Value of attEnc 
+                 modeled only security-relevant checks: attEnc.PROVISIONKEY == 1 && attEnc.DEBUG == 0?
+          19fvi. Verify received QESVN (in AKcert) >= Reference Value of QESVN (TODO: TCB levels similar to 19i)
     19g. Verify claims of TD in tdi against Reference Values based upon policy
           19gi.   Verify load-time measurements (mrtd) of TD = Reference Value of mrtd (TD owner = the one who generated the TD and gives to end-user)
                     MRTD is for the TDVF code (match PCR[0]). 
@@ -340,10 +347,9 @@ if true then continue
     19i. Verify TDX TCB (SVNs) against Reference Values: (>=) < means vulnerable, so mandatory: 
         order based on https://api.portal.trustedservices.intel.com/documentation#pcs-tcb-info-tdx-v4: 
           SGX TCB Comp SVNs -> PCESVN -> TEE TCB SVN (TDX Module SVN)
-        19i.i.  Check received SGXTCBSVN (in PCKcert) >= Reference Value of SGXTCBSVN (SGX TCB) (component-wise 1-16) (TODO: Implement checks individually)
+        19i.i.  Check received SGXTCBSVN (in PCKcert) >= Reference Value of SGXTCBSVN (SGX TCB) (component-wise checks 1-16 individually)
         19i.ii. Check received PCESVN (in PCKcert) >= Reference Value of PCESVN 
         19i.iii.Check received TDXTCBSVN (in tcbi) >= Reference Value of TDXTCBSVN (TDX TCB) (component-wise: currently only 2 bytes for TDX module SVN, can be extended in future) 
-
     19j. Miscellaneous based on policy 
           TODO: Tolerance for security advisories: received SGXTCBSVN (policy dependent)
           sorting: (most secure first) and then others 
@@ -364,8 +370,6 @@ type MacKey.   (* mac key *)
 type Hash.      (* hash *)
 type SigningKey.     (* signature key *)
 type VerifyingKey.     (* signature verification key *)
-type PrivKey.   (* private key for authentication *)
-type PubKey.    (* public key for authentication *)
 
 (**********************************************************************)
 (* Declarations of functions, equational theories and rewrite rules   *)
@@ -398,9 +402,8 @@ See Section 4.1.2 in manual*)
 (* Category: Digital signature schemes with appendix [HAC] *)
 (* Subcategory: Deterministic [HAC]*)
 (********************************************************)
-fun spk(SigningKey): VerifyingKey.
-fun pub(PrivKey): PubKey.
-fun spkey2bs(VerifyingKey): bitstring [typeConverter].
+fun pub(SigningKey): VerifyingKey.
+fun verKey2bs(VerifyingKey): bitstring [typeConverter].
 
 fun sign(SigningKey, bitstring): bitstring.
 (*reduc forall key: SigningKey,  msg: bitstring; getmess(sign(key,msg)) = msg. Not required here for Appendix*)
@@ -410,7 +413,7 @@ fun sign(SigningKey, bitstring): bitstring.
 fun verifySign(VerifyingKey, bitstring, bitstring): bool
 reduc 
   forall key: SigningKey, msg: bitstring;
-    verifySign(spk(key), msg, sign(key, msg)) = true.
+    verifySign(pub(key), msg, sign(key, msg)) = true.
 
 (********************************************************)
 (* SGX-related*)
@@ -424,7 +427,7 @@ free c_PCE_QE: channel.
 free c_PCE_Ver: channel [private]. (*Private channel*)
 
 
-(* Reference Values *)
+(* Verification Collateral: Reference Values *)
 (* For simplicity, only one value is used for each Reference Value. For multiple values, use || etc. *)
 (* TD QE provided by Intel *)
 free mrEncRef: bitstring. (*MRENCLAVE of QE*)
@@ -466,8 +469,8 @@ event decSuccess.
 event CPUsentSMR(bitstring, bitstring).
 event TDXMsentTDR(bitstring).
 event QuoteVerified(bitstring, bitstring, bitstring).
-event TDidentity(PubKey). 
-event VerIdentity(PubKey). 
+event TDidentity(VerifyingKey). 
+event VerIdentity(VerifyingKey). 
 event AKverified(VerifyingKey). 
 event AKsent(VerifyingKey).
 (********************************************************)
@@ -507,7 +510,7 @@ event (test7(tcbiClaims,rdata)). *)
 query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
   event (QuoteVerified(tcbiClaims,tdiClaims,rdata)).
 
-query pubTDK: PubKey, pubTDK_Ver: PubKey;
+query pubTDK: VerifyingKey, pubTDK_Ver: VerifyingKey;
   (event(TDidentity(pubTDK)) &&
    event(VerIdentity(pubTDK_Ver))).
 (**********************************************************************)
@@ -529,22 +532,34 @@ query pubAK: VerifyingKey;
 
 
 (* Integrtiy of tcbiClaims and rdata: step 6-19 *)
-(* query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
 event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
-event    (CPUsentSMR(tcbiClaims,rdata)). *)
+event    (CPUsentSMR(tcbiClaims,rdata)).
 
+(*simplified query: integrity of tdiClaims: step 8-19*)
+query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
+event (TDXMsentTDR(tdiClaims)).
+
+(********************************************************)
+(* Freshness Queries *)
+(********************************************************)
 query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
   event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
   inj-event (CPUsentSMR(tcbiClaims,rdata)).
 
-(*simplified query: integrity of tdiClaims: step 8-19*)
-(* query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
-event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
-event (TDXMsentTDR(tdiClaims)). *)
-
 query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
   event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
   inj-event (TDXMsentTDR(tdiClaims)).
+
+(********************************************************)
+(* Secrecy Query *)
+(********************************************************)
+(* query attacker(PCK). *)
+query secret PCK.
+query secret PCAK.
+query secret AK.
+query secret MK.
 
 (********************************************************)
 (* Authentication Queries *)
@@ -557,14 +572,11 @@ query pubAK: VerifyingKey, pubAK_PCE: VerifyingKey;
 
 
 (* Authentication of TD (Attestation protocol phase) *)
-query pubTDK: PubKey, pubTDK_Ver: PubKey;
-  (event(TDidentity(pubTDK)) &&
-   event(VerIdentity(pubTDK_Ver))) ==>
+query pubTDK: VerifyingKey, pubTDK_Ver: VerifyingKey;
+  (event(VerIdentity(pubTDK_Ver)) &&
+   event(TDidentity(pubTDK))) ==>
   (pubTDK = pubTDK_Ver).
-(********************************************************)
-(* Secrecy Query *)
-(********************************************************)
-(* query attacker(sec). *)
+
 
 (**********************************************************************)
 (* Declarations of the processes for each role. *)
@@ -590,7 +602,7 @@ let PCE(c_PCE_CPU: channel, PCK: SigningKey) =
 
 let QEinit(c_QE_CPU,c_QE_main: channel, PCEinfo: bitstring) =
   new AK: SigningKey;  (*Step I0 Note: generate here inside init process because used throughout*)
-  let pubAK = spk(AK) in  (*Public part of attestation key*)
+  let pubAK = pub(AK) in  (*Public part of attestation key*)
   event AKsent(pubAK);
   out(c, pubAK); (*Give public key to adversary*)
   in(c, QEauthData: bitstring);
@@ -667,7 +679,11 @@ let QE(c_QE_CPU: channel, AK: SigningKey, AKcert: bitstring, PCKcert: bitstring,
 
 (*VMM: Part of adversary*)
 
-let TD(c_TD_TDX: channel, TDK: PrivKey) =
+let TD(c_TD_TDX: channel) =
+  new TDK: SigningKey;  (* Step 0a: Private part of TDK *)
+  let pubTDK = pub(TDK) in  (* Step 0a: Public part of TDK *)
+  out (c, pubTDK);  (* Step 0b *)
+
   in  (c,challenge_TD: bitstring);  (* Step 1c *)
   let rdata_prehash = (pub(TDK),challenge_TD) in (* for Step 2 *)
   let rdata = sha256Hash(rdata_prehash) in (*for Step 2 *)
@@ -733,8 +749,9 @@ let CPUHardware(c_QE_CPU: channel, c_TDX_CPU: channel, MK: MacKey) =
   else
   out(c_QE_CPU,false). (*Step 14*)
 
-let Verifier(pubIRK: VerifyingKey) =
-  in(c,pubTDK_Ver: PubKey);   (*Step 1b: can be obtained from untrusted channel since hash is protected via Quote*)
+let Verifier(pubIRK: VerifyingKey, sgxTcbComp1Ref: nat, sgxTcbComp2Ref: nat, sgxTcbComp3Ref: nat, sgxTcbComp4Ref: nat, sgxTcbComp5Ref: nat, sgxTcbComp6Ref: nat, sgxTcbComp7Ref: nat, sgxTcbComp8Ref: nat,
+    sgxTcbComp9Ref: nat, sgxTcbComp10Ref: nat, sgxTcbComp11Ref: nat, sgxTcbComp12Ref: nat, sgxTcbComp13Ref: nat, sgxTcbComp14Ref: nat, sgxTcbComp15Ref: nat, sgxTcbComp16Ref: nat, PCESVNRef:nat, TDXTCBSVNRef:nat) =
+  in(c,pubTDK_Ver: VerifyingKey);   (*Step 1b: can be obtained from untrusted channel since hash is protected via Quote*)
   new challenge: bitstring; (*for Step 1c*)
   out (c,challenge);  (*Step 1c:Send challenge*)
   in(c,(QuoteHeader_Ver: bitstring, 
@@ -742,15 +759,18 @@ let Verifier(pubIRK: VerifyingKey) =
       tudFlag_Ver: bool, secFlag_Ver: bool, xfam_Ver: bitstring, mrtd_Ver: bitstring, mrc_Ver: bitstring, mro_Ver: bitstring, mroc_Ver: bitstring, rtmr0_Ver: bitstring, rtmr1_Ver: bitstring, rtmr2_Ver: bitstring, rtmr3_Ver: bitstring,   (*tdiClaims*)
       rdata_Ver: bitstring,  (*rdata*)
       AKsig_Ver: bitstring, pubAK_Ver: VerifyingKey, CPUSVN_Ver: nat, misc_Ver: bitstring, cetAtt_Ver: bitstring, res6_Ver: bitstring, extprodid_Ver: bitstring, provKeyFlag_Ver: bool, debugFlag_Ver: bool, mrEnc_Ver: bitstring, res7_Ver: bitstring, mrSigner_Ver: bitstring, res8_Ver: bitstring, config_Ver: bitstring, prodid_Ver: bitstring, QESVN_Ver: nat, confSVN_Ver: nat, res9_Ver: bitstring, famID_Ver: bitstring, QErdata_Ver: bitstring, PCKsig_Ver: bitstring, QEauthData_Ver: bitstring, 
-      pubPCK_Ver: VerifyingKey, sgxtcbcomp_Ver: nat, PCESVN_Ver: nat, PCAKsig_Ver: bitstring,  (*PCKcert*)
+      pubPCK_Ver: VerifyingKey, sgxTcbComp1_Ver: nat, sgxTcbComp2_Ver: nat, sgxTcbComp3_Ver: nat, sgxTcbComp4_Ver: nat, sgxTcbComp5_Ver: nat, sgxTcbComp6_Ver: nat, sgxTcbComp7_Ver: nat, sgxTcbComp8_Ver: nat,
+      sgxTcbComp9_Ver: nat, sgxTcbComp10_Ver: nat, sgxTcbComp11_Ver: nat, sgxTcbComp12_Ver: nat, sgxTcbComp13_Ver: nat, sgxTcbComp14_Ver: nat, sgxTcbComp15_Ver: nat, sgxTcbComp16_Ver: nat, PCESVN_Ver: nat, PCAKsig_Ver: bitstring,  (*PCKcert*)
       pubPCAK_Ver: VerifyingKey, IRKsig_Ver: bitstring,  (*ICAcert*)
       pubIRK_Ver: VerifyingKey, IRKselfsig_Ver: bitstring));  (*Step 18*)
 
   (* Step 19a *)
-  if verifySign(pubIRK,spkey2bs(pubIRK_Ver),IRKselfsig_Ver) = true then (*Step 19ai: verify authenticity of rootcert*)  
-  if verifySign(pubIRK,spkey2bs(pubPCAK_Ver),IRKsig_Ver) = true then (*Step 19aii: verify authenticity of ICAcert*)  
+  if verifySign(pubIRK,verKey2bs(pubIRK_Ver),IRKselfsig_Ver) = true then (*Step 19ai: verify authenticity of rootcert*)  
+  if verifySign(pubIRK,verKey2bs(pubPCAK_Ver),IRKsig_Ver) = true then (*Step 19aii: verify authenticity of ICAcert*)  
   (* pubPCAK_Ver is authentic, it can be used now *)
-  if verifySign(pubPCAK_Ver,(pubPCK_Ver,sgxtcbcomp_Ver,PCESVN_Ver),PCAKsig_Ver) = true then (*Step 19aiii: verify authenticity of PCKcert*)  
+  let sgxTcbComp_Ver = (sgxTcbComp1_Ver, sgxTcbComp2_Ver, sgxTcbComp3_Ver, sgxTcbComp4_Ver, sgxTcbComp5_Ver, sgxTcbComp6_Ver, sgxTcbComp7_Ver, sgxTcbComp8_Ver,
+    sgxTcbComp9_Ver, sgxTcbComp10_Ver, sgxTcbComp11_Ver, sgxTcbComp12_Ver, sgxTcbComp13_Ver, sgxTcbComp14_Ver, sgxTcbComp15_Ver, sgxTcbComp16_Ver) in
+  if verifySign(pubPCAK_Ver,(pubPCK_Ver,sgxTcbComp_Ver,PCESVN_Ver),PCAKsig_Ver) = true then (*Step 19aiii: verify authenticity of PCKcert*)  
   (* pubPCK_Ver is authentic, it can be used now *)
 
   (* Step 19b *)
@@ -765,57 +785,71 @@ let Verifier(pubIRK: VerifyingKey) =
   event test8;    
 
   (* Step 19d *)
-  if (mrEnc_Ver = mrEncRef) then (* Step 19di mrEnc of TD QE *)  
-  if (mrSigner_Ver = mrSignerRef) then  (* Step 19dii mrSigner of TD QE *)
-  if (prodid_Ver = prodidRef) then (* Step 19diii prodid of TD QE *)
-  if provKeyFlag_Ver = true && debugFlag_Ver = false then (* Step 19dv *) 
-  in(c,QESVNRef: nat); (* or set a hardcoded value *)
-  if (QESVN_Ver >= QESVNRef) then (* Step 19dvi: Check QESVN *)
-
-  (* Step 19e *)
   let tcbiClaims_Ver = (TDXTCBSVN_Ver,mrs_Ver,mrss_Ver,att_Ver) in 
   let tdatt_Ver = (tudFlag_Ver, secFlag_Ver) in
   let tdiClaims_Ver = (tdatt_Ver,xfam_Ver,mrtd_Ver,mrc_Ver,mro_Ver,mroc_Ver,rtmr0_Ver,rtmr1_Ver,rtmr2_Ver,rtmr3_Ver) in   
-  let QuoteBody_Ver = (tcbiClaims_Ver,tdiClaims_Ver,rdata_Ver) in (*for Step 19e*)
-  if verifySign(pubAK_Ver,(QuoteHeader_Ver,QuoteBody_Ver),AKsig_Ver) = true then (*Step 19e: verify authenticity of TD Quote*)
+  let QuoteBody_Ver = (tcbiClaims_Ver,tdiClaims_Ver,rdata_Ver) in (*for Step 19d*)
+  if verifySign(pubAK_Ver,(QuoteHeader_Ver,QuoteBody_Ver),AKsig_Ver) = true then (*Step 19d: verify authenticity of TD Quote*)
   event test3;
   event test6(tdiClaims_Ver);
 
-  (* Step 19f *)
-  let rdata_comp_prehash = (pubTDK_Ver,challenge) in (* for Step 19f: rdata prehash *)
-  let rdata_comp = sha256Hash(rdata_comp_prehash) in (* for Step 19f: computed rdata *)
-  if (rdata_Ver = hash2bs(rdata_comp)) then     (* Step 19f: freshness and public key check *)
+  (* Step 19e *)
+  let rdata_comp_prehash = (pubTDK_Ver,challenge) in (* for Step 19e: rdata prehash *)
+  let rdata_comp = sha256Hash(rdata_comp_prehash) in (* for Step 19e: computed rdata *)
+  if (rdata_Ver = hash2bs(rdata_comp)) then     (* Step 19e: freshness and public key check *)
   (* Golden value for challenge is the one which is sent *)
   (* Golden value for public key is the one in the authentic TD Quote *)
   (* If the hash of concatenation match, it means both values match *)
 
+  (* Step 19f *)
+  if (mrEnc_Ver = mrEncRef) then (* Step 19fi mrEnc of TD QE *)  
+  if (mrSigner_Ver = mrSignerRef) then  (* Step 19fii mrSigner of TD QE *)
+  if (prodid_Ver = prodidRef) then (* Step 19fiii prodid of TD QE *)
+  if provKeyFlag_Ver = true && debugFlag_Ver = false then (* Step 19fv *) 
+  in(c,QESVNRef: nat); 
+  if (QESVN_Ver >= QESVNRef)  (* Step 19fvi: Check QESVN *)
+
   (* Step 19g *)
-  if (mrtd_Ver = mrtdRef) then (* Step 19gi *)
-  if (rtmr0_Ver = rtmr0Ref) then (* Step 19gii *)
-  if (rtmr1_Ver = rtmr1Ref) then (* Step 19gii *)
-  if (rtmr2_Ver = rtmr2Ref) then (* Step 19gii *)
-  if (rtmr3_Ver = rtmr3Ref) then (* Step 19gii *)
-  if (mro_Ver = mroRef) then (* Step 19giiia *)
-  if (mroc_Ver = mrocRef) then (* Step 19giiib *)
-  if (mrc_Ver = mrcRef) then (* Step 19giv *)
-  if tudFlag_Ver = false then (* Step 19gva *)
-  if secFlag_Ver = true then (* Step 19gvb *)
+  && (mrtd_Ver = mrtdRef)  (* Step 19gi *)
+  && (rtmr0_Ver = rtmr0Ref)  (* Step 19gii *)
+  && (rtmr1_Ver = rtmr1Ref)  (* Step 19gii *)
+  && (rtmr2_Ver = rtmr2Ref)  (* Step 19gii *)
+  && (rtmr3_Ver = rtmr3Ref)  (* Step 19gii *)
+  && (mro_Ver = mroRef)  (* Step 19giiia *)
+  && (mroc_Ver = mrocRef)  (* Step 19giiib *)
+  && (mrc_Ver = mrcRef)  (* Step 19giv *)
+  && tudFlag_Ver = false  (* Step 19gva *)
+  && secFlag_Ver = true  (* Step 19gvb *)
   (* Note: The name secFlagRef cannot be declared with the type 'bool'. Hence, taken as true for reference *)
   (* if secFlag_Ver = secFlagRef then *)
 
   (* Step 19h *)
-  if (mrs_Ver = mrsRef) then  (* Step 19hi *)
-  if (mrss_Ver = mrssRef) then  (* Step 19hii *)
-  if (att_Ver = attRef) then  (* Step 19hiii *)
+  && (mrs_Ver = mrsRef)  (* Step 19hi *)
+  && (mrss_Ver = mrssRef)  (* Step 19hii *)
+  && (att_Ver = attRef)  (* Step 19hiii *)
+  
   (* Step 19i *)
-  in(c,sgxtcbcompRef: nat); (* or set a hardcoded value *)
-  if (sgxtcbcomp_Ver >= sgxtcbcompRef) then (* Step 19i.i: Check SGXTCBSVN *)
+  (* Step 19i.i: Check SGXTCBSVN *)
+  && (sgxTcbComp1_Ver >= sgxTcbComp1Ref) 
+  && (sgxTcbComp2_Ver >= sgxTcbComp2Ref)
+  && (sgxTcbComp3_Ver >= sgxTcbComp3Ref)
+  && (sgxTcbComp4_Ver >= sgxTcbComp4Ref)
+  && (sgxTcbComp5_Ver >= sgxTcbComp5Ref)
+  && (sgxTcbComp6_Ver >= sgxTcbComp6Ref)
+  && (sgxTcbComp7_Ver >= sgxTcbComp7Ref)
+  && (sgxTcbComp8_Ver >= sgxTcbComp8Ref)
+  && (sgxTcbComp9_Ver >= sgxTcbComp9Ref)
+  && (sgxTcbComp10_Ver >= sgxTcbComp10Ref)
+  && (sgxTcbComp11_Ver >= sgxTcbComp11Ref)
+  && (sgxTcbComp12_Ver >= sgxTcbComp12Ref)  
+  && (sgxTcbComp13_Ver >= sgxTcbComp13Ref)
+  && (sgxTcbComp14_Ver >= sgxTcbComp14Ref)
+  && (sgxTcbComp15_Ver >= sgxTcbComp15Ref)
+  && (sgxTcbComp16_Ver >= sgxTcbComp16Ref) 
 
-  in(c,PCESVNRef: nat); (* or set a hardcoded value *)
-  if (PCESVN_Ver >= PCESVNRef) then (* Step 19i.ii: Check PCESVN *)
+  && (PCESVN_Ver >= PCESVNRef)  (* Step 19i.ii: Check PCESVN *)
 
-  in(c,TDXTCBSVNRef: nat); (* or set a hardcoded value *)
-  if (TDXTCBSVN_Ver >= TDXTCBSVNRef) then (* Step 19i.iii: Check TDXTCBSVN *)
+  && (TDXTCBSVN_Ver >= TDXTCBSVNRef) then (* Step 19i.iii: Check TDXTCBSVN *)
 
   (* pubTDK_Ver is now trustworthy *)
   event QuoteVerified(tcbiClaims_Ver,tdiClaims_Ver,rdata_Ver);
@@ -829,29 +863,46 @@ let Verifier(pubIRK: VerifyingKey) =
 set preciseActions = true. (*Required otherwise some properties cannot be proved*)
 
 process
-  new MK: MacKey; (*MAC key for smr*)
+  new MK: MacKey; (*MAC key for smr: single MAC key is used for all TDs on same platform, so generate here*)
 
   (* Generate IRK and rootcert here  *)
   new IRK: SigningKey;  (*Note: generate here because need to pass public key to Verifier*)
-  let pubIRK = spk(IRK) in  (*Public part of IRK*)
-  let IRKselfsig = sign(IRK,spkey2bs(pubIRK)) in
+  let pubIRK = pub(IRK) in  (*Public part of IRK*)
+  let IRKselfsig = sign(IRK,verKey2bs(pubIRK)) in
   let rootcert = (pubIRK,IRKselfsig) in 
   out(c, rootcert); (*give rootcert to adversary*)
 
   (* Generate PCAK and ICAcert here *)
   new PCAK: SigningKey;  
-  let pubPCAK = spk(PCAK) in  (*Public part of PCAK*)
-  let IRKsig = sign(IRK,spkey2bs(pubPCAK)) in
+  let pubPCAK = pub(PCAK) in  (*Public part of PCAK*)
+  let IRKsig = sign(IRK,verKey2bs(pubPCAK)) in
   let ICAcert = (pubPCAK,IRKsig) in 
   out(c, ICAcert); (*give ICAcert to adversary*)
 
   (* Generate PCK and PCKcert here *)
   new PCK: SigningKey;  (*Step I0 *)
-  let pubPCK = spk(PCK) in  (*Public part of PCK*)
-  in(c,sgxtcbcomp: nat); (*declaration of new names with type nat is not allowed: manual p. 39, so input from adversary*)
-  in(c,PCESVN: nat); (*declaration of new names with type nat is not allowed: manual p. 39, so input from adversary*)  
-  let PCAKsig = sign(PCAK,(pubPCK,sgxtcbcomp,PCESVN)) in
-  let PCKcert = (pubPCK,sgxtcbcomp,PCAKsig) in 
+  let pubPCK = pub(PCK) in  (*Public part of PCK*)
+  in(c,sgxTcbComp1: nat); 
+  in(c,sgxTcbComp2: nat); 
+  in(c,sgxTcbComp3: nat); 
+  in(c,sgxTcbComp4: nat); 
+  in(c,sgxTcbComp5: nat); 
+  in(c,sgxTcbComp6: nat); 
+  in(c,sgxTcbComp7: nat); 
+  in(c,sgxTcbComp8: nat); 
+  in(c,sgxTcbComp9: nat); 
+  in(c,sgxTcbComp10: nat); 
+  in(c,sgxTcbComp11: nat); 
+  in(c,sgxTcbComp12: nat); 
+  in(c,sgxTcbComp13: nat); 
+  in(c,sgxTcbComp14: nat); 
+  in(c,sgxTcbComp15: nat); 
+  in(c,sgxTcbComp16: nat); 
+  in(c,PCESVN: nat); 
+  let sgxTcbComp = (sgxTcbComp1, sgxTcbComp2, sgxTcbComp3, sgxTcbComp4, sgxTcbComp5, sgxTcbComp6, sgxTcbComp7, sgxTcbComp8,
+    sgxTcbComp9, sgxTcbComp10, sgxTcbComp11, sgxTcbComp12, sgxTcbComp13, sgxTcbComp14, sgxTcbComp15, sgxTcbComp16) in
+  let PCAKsig = sign(PCAK,(pubPCK,sgxTcbComp,PCESVN)) in
+  let PCKcert = (pubPCK,sgxTcbComp,PCAKsig) in 
   out(c, PCKcert); (*give PCKcert to adversary*)
   (*When PCE is untrusted, leak PCK to adversary *)
   (* out(c, PCK); *)
@@ -864,18 +915,35 @@ process
 
   new PCEinfo: bitstring; (*To implement TargetInfo*)
 
+  (* Initialization phase *)
   PCE(c_PCE_CPUinit,PCK) | 
   QEinit(c_QE_CPUinit,c_QE_main,PCEinfo) |  
   CPUinit(c_QE_CPUinit,c_PCE_CPUinit,PCEinfo) |
   in(c_QE_main, (AK: SigningKey, AKcert: bitstring));
 
-  new TDK: PrivKey;  (* Step 0a: Private part of TDK *)
-  let pubTDK = pub(TDK) in  (* Step 0a: Public part of TDK *)
-  out (c, pubTDK);  (* Step 0b *)
+  in(c,sgxTcbComp1Ref: nat); 
+  in(c,sgxTcbComp2Ref: nat); 
+  in(c,sgxTcbComp3Ref: nat); 
+  in(c,sgxTcbComp4Ref: nat); 
+  in(c,sgxTcbComp5Ref: nat); 
+  in(c,sgxTcbComp6Ref: nat); 
+  in(c,sgxTcbComp7Ref: nat); 
+  in(c,sgxTcbComp8Ref: nat); 
+  in(c,sgxTcbComp9Ref: nat); 
+  in(c,sgxTcbComp10Ref: nat); 
+  in(c,sgxTcbComp11Ref: nat); 
+  in(c,sgxTcbComp12Ref: nat); 
+  in(c,sgxTcbComp13Ref: nat); 
+  in(c,sgxTcbComp14Ref: nat); 
+  in(c,sgxTcbComp15Ref: nat); 
+  in(c,sgxTcbComp16Ref: nat); 
+  in(c,PCESVNRef: nat);
+  in(c,TDXTCBSVNRef: nat);
 
-
+  (* Attestation protocol phase  *)
   (*The trace will have the processes in the following order*)
   ( ! ( new c_QE_CPU: channel; new c_TDX_CPU: channel; new c_TD_TDX: channel;  
-      ( QE(c_QE_CPU,AK,AKcert,PCKcert,ICAcert,rootcert) |  TD(c_TD_TDX,TDK) | 
+      ( QE(c_QE_CPU,AK,AKcert,PCKcert,ICAcert,rootcert) |  TD(c_TD_TDX) | 
       TDXModule(c_TD_TDX,c_TDX_CPU) | CPUHardware(c_QE_CPU,c_TDX_CPU,MK)  ) ) |
-  (!Verifier(spk(IRK))) )
+  (!Verifier(pub(IRK), sgxTcbComp1Ref, sgxTcbComp2Ref, sgxTcbComp3Ref, sgxTcbComp4Ref, sgxTcbComp5Ref, sgxTcbComp6Ref, sgxTcbComp7Ref, sgxTcbComp8Ref,
+    sgxTcbComp9Ref, sgxTcbComp10Ref, sgxTcbComp11Ref, sgxTcbComp12Ref, sgxTcbComp13Ref, sgxTcbComp14Ref, sgxTcbComp15Ref, sgxTcbComp16Ref, PCESVNRef, TDXTCBSVNRef)) )
