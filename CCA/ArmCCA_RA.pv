@@ -1,0 +1,447 @@
+(* For using these artifacts, please cite the corresponding paper as follows: *)
+(* Muhammad Usama Sardar, Thomas Fossati, and Simon Frost, SoK: Attestation in Confidential Computing,
+https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing, 2023 *)
+
+(* Authors: Muhammad Usama Sardar and Shale Xiong *)
+(* Contributions are welcome *)
+
+(* Instructions to run: *)
+(* Install ProVerif: see https://bblanche.gitlabpages.inria.fr/proverif/ for details*)
+(* create a subfolder for results before executing *)
+(* Then to execute: run as follows: *)
+(* proverif -graph <subfolderNameForResults> ArmCCA_RA.pv *)
+(* subfolder will contain the traces in .dot as well as .PDF *)
+
+(* To run in interactive mode: *)
+(* proverif_interact ArmCCA_RA.pv *)
+
+(* Informal description of the protocol:
+
+Realm = Realm instance
+**********************************************************************
+Assumptions: 
+**********************************************************************
+Approach (symbolic security analysis)/Tool (ProVerif) assumptions: 
+  1. assume perfect cryptographic function (i.e., irreversible) such as key derivation and hash.
+  2. side channel is out of scope.
+
+Model assumptions:
+  a. secure channel between Hes and Rmm to transport the rak key-pair (initialization phase)
+  b. secure channel between Rmm and Realm (ABI call assumed to be immune to interposition)
+  c. public part of CCA Platform Attestation Key (CPAK), i.e., pubCpak, is pre-configured in the Verifier
+  d. Association between implementation identifier and pubCpak and Reference Values is not yet modeled because of unclear specs. 
+
+
+Arm CCA Attester is a "Composite" Attester, consisting of Platform Attester and Realm Attester. The Realm Attester acts as the "lead" Attester. 
+
+So there are two independent but related parts in the protocol, namely platform Claims and realm Claims. 
+The former must happen before the latter, since the Verifier, who initializes the attestation of a Realm, will request both Claims.
+
+HES produces platform measurement signed by a platform-related private key, `privCpak`. In the init phase, HES derives RMM key-pair, `privRak` and `pubRak`. 
+Note that the communication channel between HES and Realm is considered private, reflecting the fact that they are in the same machine and any type of side channel attack is out of scope.
+
+**********************************************************************
+Naming convention: 
+**********************************************************************
+  <var>_<entityName> for a variable received from another entity (<entityName>'s view of <var>)
+  where <entityName> = {Hes, Rmm, Realm, Ver}
+
+  xxSig = signed using key xx
+  zzRef = Reference Value for zz
+
+  YY key-pair = both private and public parts
+  privYY = Private part of key YY
+  pubYY or pub(YY) = Public part of key YY
+
+Roles: Hes (cpak) | Rmm | Realm | Verifier (pubIRK)
+where | represents parallel composition (in contrast to || which is used for concatenation)
+  and preconfigured keys are shown in parenthesis
+
+Fields marked as "user-defined input" are user-defined.
+
+**********************************************************************
+Mapping for code symbols <-> terminology in Arm specs
+**********************************************************************
+cpak = Initial Attestation Key (IAK)
+
+Summary with key fields:
+Formatting: 2-space indentation represents sub-fields/sub-data structures
+kat = Key Attestation Token
+  nonce provided by challenger
+  pubRik = Public part of Realm application identity key (rik key-pair) (ephemeral key)
+pat = Platform Attestation Token (TODO for attested TLS: check order of realm and platform Evidences)
+  realmEvidence = Realm token
+    rChallenge = sha512(kat)
+    pubRak
+    rim
+  platformEvidence = CCA platform token
+    hash(pubRak)
+    CCA platform identity
+    CCA platform lifecycle state
+    CCA platform software component measurements
+
+Details: [source: Realm Management Monitor specification (Release: 1.0-eac2 (07-06-2023))]
+realmEvidence = Realm token [Sec. A7.2.3.1 Realm claims] 
+  realmClaims = Realm claims (cca-realm-claims): all following claims MUST be present
+    rChallenge = Realm challenge claim (cca-realm-challenge) [User-defined field]
+      for architecturally-defined attestation: nonce (client challenge) from Verifier
+      use case (for attested TLS): hash(kat)
+        where
+        hash = sha512 [based on https://github.com/CCC-Attestation/attested-tls-poc/blob/main/doc/parsec-evidence-cca.md#verification-procedure]
+        kat = nonce || pubRik
+    rpv = Realm Personalization Value claim (cca-realm-personalization-value) 
+    rim = Realm Initial Measurement claim (cca-realm-initial-measurement) (RIM)
+    rem = Realm Extensible Measurements claim (cca-realm-extensible-measurements) (REM) 
+    rHashAlgoId = Realm hash algorithm ID claim (cca-realm-hash-algo-id) (algorithm used to calculate all hash values which are present in the Realm token.)
+    pubRak = Realm public key claim (cca-realm-public-key): Public part of Realm Attestation Key (rak key-pair)
+    rRakHashAlgoId = Realm public key hash algorithm identifier claim (cca-realm-public-key-hash-algo-id) (algorithm used to calculate hash(pubRak))
+  rakSig = sign (privRak, realmClaims)
+platformEvidence = Platform token [Sec. A7.2.3.2 CCA platform claims]
+  platformClaims = CCA platform claims (cca-platform-claims) 
+    pProfile = CCA platform profile claim (cca-platform-profile) (part of the HES provisioned setup and helps identify the attestation scheme)
+    pChallenge = CCA platform challenge claim (cca-platform-challenge)
+      hash(pubRak) where hash function defined by rRakHashAlgoId
+    pImpId = CCA platform Implementation ID claim (cca-platform-implementation-id) (comes from the target env.)
+    pInstId = CCA platform Instance ID claim (cca-platform-instance-id) (part of the HES provisioned setup and helps to identify the HUK/GUK at the root of derivation)
+    pConfig = CCA platform config claim (cca-platform-config) (comes from the target env.)
+    pLifeCycle = CCA platform lifecycle claim (cca-platform-lifecycle)
+      pLifeCycleState = CCA platform lifecycle state (value[15:8])
+      pImpDef = Implementation defined (value[7:0])
+    pSwComp = CCA platform software components claim (cca-platform-sw-components)
+      pSwCompType = component type (optional)
+      pSwCompMeas = measurement value
+      pSwCompVer = version (optional)
+      pSwCompSignerId = signer id 
+      pSwCompHashAlgoId = hash algorithm identifier (optional)
+    pVer = CCA platform verification service claim (cca-platform-verification-service) (optional) (part of the HES provisioned setup and helps identify the attestation scheme)
+    pHashId = CCA platform hash algorithm ID claim (cca-platform-hash-algo-id) (comes from the target env.)
+  cpakSig = sign (privCpak, platformClaims)
+
+**********************************************************************
+Initialization Steps (Rmm signing key provisioning): 
+**********************************************************************
+Hes (cpak) | RmmInit
+where cpak = Initial Attestation Key (IAK) 
+I1. Hes: Derive rak key-pair
+I2. Hes: cpakSig = sign(privCpak, platformClaims)
+      platformClaims = pProfile || pChallenge || pImpId || pInstId || pConfig || pLifeCycle || pSwComp || pVer || pHashId 
+        pChallenge = hash(pubRak) 
+          where hash function defined by rRakHashAlgoId
+            TODO: how does HES get rRakHashAlgoId value? assumed sha256 currently (since the only one implemented)
+        pVer is optional
+I3. Hes -> RmmInit: privRak || pubRak || platformEvidence
+      privRak and pubRak as generated in Step I1 
+      platformEvidence = platformClaims || cpakSig
+I4. RmmInit: Cache privRak, pubRak and platformEvidence
+
+**********************************************************************
+Attestation Protocol Steps:
+**********************************************************************
+! ( Rmm (privRak) | Realm ) | ! Verifier (pubCpak) 
+
+0. Realm: Generate REM (Realm Ephemeral Key) (only for attested TLS)
+1. Verifier -> Realm: challenge
+2. Realm -> Rmm: forward the received challenge from Step 1
+3. Rmm: realmClaims = rChallenge || rpv || rim || rem || rHashAlgoId || pubRak || rRakHashAlgoId
+          rChallenge = nonce (client challenge) from Verifier
+4. Rmm: realmEvidence = (realmClaims, rakSig)
+          realmClaims from Step 3
+          rakSig = sign (privRak, realmClaims)
+5. Rmm -> Realm: platformEvidence || realmEvidence
+6. Realm -> Verifier: platformEvidence || realmEvidence (TODO: check order)
+7. Verifier: Cryptographic Validation of Remote Evidence (Note: no specific order for crypto checks, e.g., signature check (7d) can be after binding check (7e), all checks should pass)
+  7a. pImpId = pImpIdRef 
+  7b. pInstId = pInstIdRef
+  7c. verify signature over platformClaims using pubCpak corresponding to pImpId and pInstId (pre-configured in our model)
+  7d. verify signature over realmClaims using received pubRak in realmEvidence 
+  7e. check cryptographic binding between platformEvidence and realmEvidence 
+      i.e., check received hash(pubRak) in pChallenge in platformEvidence = Computed hash of received pubRak in realmEvidence?
+        hash according to hash algorithm identifier (rRakHashAlgoId)
+          if rRakHashAlgoId = hashIdRef1 // symbolic representation for sha512
+          then 
+            sha512(pubRak)
+          else 
+            sha256(pubRak)
+           sha512 (hashIdRef1) and sha256 (hashIdRef2) are sufficient for symbolic model
+          (sha256, sha512: AppendixB in  https://developer.arm.com/documentation/den0137/1-0bet1)
+          (recommended sha512 https://developer.arm.com/documentation/DEN0096/latest)
+          (implementation currently has sha256 only)
+  7f. check freshness (received challenge in rChallenge = sent challenge in Step 1)
+  7g. hash check for kat and pat (only for attested TLS)
+      See verification procedure in https://github.com/CCC-Attestation/attested-tls-poc/blob/main/doc/parsec-evidence-cca.md
+8. Verifier: check pLifeCycleState in platformEvidence = Reference Value (0x30) which is then "SECURED"
+    7 possible states of this claim: See A7.2.3.2.6 CCA platform lifecycle claim [source: Realm Management Monitor specification (Release: 1.0-eac2 (07-06-2023))] 
+9. Verifier: Mandatory Reference Values Checks
+    based on https://github.com/veraison/services/wiki/CCA-Evidence-Verification
+  9a. software component measurement (pSwCompMeas) in platformEvidence = Reference Value pSwCompMeasRef (exact match)
+  9b. pSwCompSignerId = pSwCompSignerIdRef
+  9c. configuration claim (pConfig) in platformEvidence = Reference Value (system architecture has correct settings: bitwise check)
+      TODO: needs some discussions
+      https://developer.arm.com/documentation/den0129/latest/
+      Section B4.1.1 "Non-volatile storage" (page 40) RNVS system properties (2022/Oct/12)
+  9d. pProfile = pProfileRef 
+  9e. rim in realmEvidence = Reference Value of rim (rimRef)
+10. Verifier: Optional based on policy
+  10a. rpv in realmEvidence = rpvRef 
+  10b. rem in realmEvidence = remRef 
+  10c. pVer in realmEvidence = pVerRef
+
+  If all steps in 7-9 and optionally 10 succeed, then accept Evidences
+*)
+
+(**********************************************************************)
+(* Type Declarations *)
+(**********************************************************************)
+type SigningKey. (* Signing keys *)
+type VerifyingKey.  (* Verification keys *)
+type Sign.     (* Signature *)
+type Hash.     (* Hash *)
+type Seed.  (* random seed *)
+
+(**********************************************************************)
+(* Declarations of functions, equational theories and rewrite rules *)
+(**********************************************************************)
+(********************************************************)
+(* Public-key Digital Signatures *)
+(* Category: Digital signature schemes with appendix [HAC] *)
+(* Subcategory: Deterministic [HAC]*)
+(********************************************************)
+fun pub(SigningKey): VerifyingKey.
+fun sign(SigningKey,bitstring): Sign. (* Signature generation *)
+
+(*Good practice to add function declaration for destructors also*)
+fun verifySign(VerifyingKey,bitstring,Sign): bool  (* verification *)
+reduc forall k:SigningKey, m:bitstring; verifySign(pub(k),m,sign(k,m)) = true.
+(* By definition 11.3 p. 428, DSS with appendix require the original message as input 
+to the verification algorithm. Result can be true or false, see Fig. 
+11.2(b), p.429 [HAC] *)
+
+fun sha256(VerifyingKey):Hash.
+
+fun kdfCpak ((*guk=*)Seed, (*pLifeCycleState=*)bitstring): SigningKey.
+fun kdfRak ((*guk=*)Seed, (*pSwComp=*)bitstring, (*pLifeCycleState=*)bitstring): SigningKey.  (* Note: we define boot state of the system as equivalent to pSwComp *)
+(**********************************************************************)
+(* Declarations of constants and free (vs. bound) names *)
+(**********************************************************************)
+free c: channel.  (* general public channel *)
+free cHesRmm: channel [private].      (* see assumption a *)
+free cRmmInitMain: channel [private].      (* to pass from RMMInit to main *)
+free cRmmRealm: channel [private].  (* public channel between Rmm and Realm *)
+free cRealmVerifier: channel.  (* public channel between Realm and Verifier *)
+
+(* Verification Collateral: Reference Values *)
+(* For simplicity, only one value is used for each Reference Value. For multiple values, use || etc. *)
+free pImpIdRef: bitstring.  (* Step 7a *) 
+free pInstIdRef: bitstring.  (* Step 7b *)
+
+free pLifeCycleStateRef: bitstring.  (* Step 8: symbolically represents value 0x30 *)
+
+free pSwCompMeasRef: bitstring.  (* Step 9a *)
+free pSwCompSignerIdRef: bitstring.  (* Step 9b *)
+free pConfigRef: bitstring.  (* Step 9c *)
+free pProfileRef: bitstring.  (* Step 9d *)
+free rimRef: bitstring.  (* Step 9e *)
+
+free rpvRef: bitstring.  (* Step 10a *)
+free remRef: bitstring.  (* Step 10b *) 
+free pVerRef: bitstring.  (* Step 10c *) 
+
+(* free privCpak:SigningKey [private]. signing key of Hes *)
+(* free privRak:SigningKey [private].  signing key of Rmm *)
+(**********************************************************************)
+(* Other declarations, e.g., events *)
+(**********************************************************************)
+event RealmVerified((*platformClaims=*)bitstring, (*realmClaims=*)bitstring).
+event SentPlatformEvidence((*platformClaims=*)bitstring).
+event SentRealmEvidence((*realmClaims=*)bitstring).
+event test. 
+
+set traceDisplay = long.
+
+(**********************************************************************)
+(* Declaration of the security properties *)
+(**********************************************************************)
+(* query event (test).  *)
+(********************************************************)
+(* Integrity Queries *)
+(********************************************************)
+query platformClaims:bitstring, realmClaims: bitstring;
+  event (RealmVerified(platformClaims, realmClaims)).  (*reachability*)
+
+(* Integrity of Realm Evidence *)
+query platformClaims:bitstring, realmClaims: bitstring;
+  event (RealmVerified(platformClaims, realmClaims)) ==> event(SentRealmEvidence(realmClaims)).  (*non-injective correspondence*)
+
+(* Integrity of Platform Evidence *)
+query platformClaims, realmClaims: bitstring;
+  event (RealmVerified(platformClaims, realmClaims)) ==> event(SentPlatformEvidence(platformClaims)).  (*non-injective correspondence*)
+
+(********************************************************)
+(* Freshness Queries *)
+(********************************************************)
+(* Freshness of Realm Evidence *)
+query platformClaims:bitstring, realmClaims: bitstring;
+  event (RealmVerified(platformClaims, realmClaims)) ==> inj-event(SentRealmEvidence(realmClaims)). (*injective correspondence*)
+
+(* Freshness of Platform Evidence *)
+query platformClaims:bitstring, realmClaims: bitstring;
+  event (RealmVerified(platformClaims, realmClaims)) ==> inj-event(SentPlatformEvidence(platformClaims)). (*injective correspondence*)
+
+
+(********************************************************)
+(* Secrecy Queries *)
+(********************************************************)
+query secret privCpak. (* only for completeness. trivially true since never sent on a public channel. see secrecy section on page 56 of ProVerif manual v2.04 (30.11.2021) *)
+query secret privRak.  (* only for completeness. trivially true since never sent on a public channel. see secrecy section on page 56 of ProVerif manual v2.04 (30.11.2021) *)
+
+(* query attacker(privCpak). cannot be used because it is not a term built from free name *)
+(* query attacker(privRak).  cannot be used because it is not a term built from free name *)
+(**********************************************************************)
+(* Declarations of the processes for each role. *)
+(**********************************************************************)
+let Hes(privCpak: SigningKey, guk: Seed, pLifeCycleState: bitstring) =
+
+  (* platformClaims = pProfile || pChallenge || pImpId || pInstId || pConfig || pLifeCycle || pSwComp || pVer || pHashId *)
+ 
+  (* HES provisioned setup *)
+  (* first two help identify the attestation scheme *)
+  in(c, pProfile: bitstring);
+  in(c, pVer: bitstring);  (* optional *)
+
+  in(c, pInstId: bitstring);  (* helps to identify the HUK/GUK at the root of derivation *)
+
+  in(c, pImpDef: bitstring);
+  let pLifeCycle = (pLifeCycleState, pImpDef) in
+
+  in(c, pSwCompType: bitstring);  (* optional *)
+  in(c, pSwCompMeas: bitstring);
+  in(c, pSwCompVer: bitstring);  (* optional *)
+  in(c, pSwCompSignerId: bitstring);
+  in(c, pSwCompHashAlgoId: bitstring);  (* optional *)
+  let pSwComp = (pSwCompType, pSwCompMeas, pSwCompVer, pSwCompSignerId, pSwCompHashAlgoId) in
+
+  (*Derive rak key-pair: signing key-pair of RMM (derived by Hes and sent over a secure channel to Rmm)*)
+  let privRak = kdfRak (guk, pSwComp, pLifeCycleState) in  (* Step I1: Derive RAK private key. typical contributions, implementations may vary*)
+  let pubRak = pub(privRak) in  (* Step I1: Derive RAK public key. *)
+  out (c,pubRak);  (* Give RAK public key to adversary *)
+
+  (* out (c,privCpak); *)  (* Leak CPAK private key to adversary *)
+  (* out (c,privRak); *)  (* Leak RAK private key to adversary *)
+
+  (* Query from Target Environment *)
+  in(c, pImpId: bitstring);
+  in(c, pConfig: bitstring);
+  in(c, pHashId: bitstring);
+
+  let pChallenge = sha256(pubRak) in  (* platformEvidence contains the hash of pubRak in nonce claim value. *)
+  
+  let platformClaims = (pProfile, pChallenge, pImpId, pInstId, pConfig, pLifeCycle, pSwComp, pVer, pHashId) in
+  let cpakSig = sign(privCpak, platformClaims) in  (* Step I2 sign platform claims using privCpak *)
+
+  let platformEvidence = (platformClaims, cpakSig) in 
+  event SentPlatformEvidence(platformClaims);
+  out (cHesRmm, (privRak, pubRak, platformEvidence)).   (* Step I3 see assumption a *)
+
+
+let RmmInit() =
+  in (cHesRmm,(privRak:SigningKey, pubRak:VerifyingKey, platformEvidence:bitstring));  (* see assumption a *)
+  out(cRmmInitMain, (privRak, pubRak, platformEvidence)).
+
+
+
+let Rmm(privRak: SigningKey, pubRak: VerifyingKey, platformEvidence: bitstring) =
+  (* do not divide platformEvidence into components here, because only need to forward it *)
+  in (cRmmRealm, challenge_RMM: bitstring);  (*Step 2*)
+  
+  (* realmClaims = rChallenge || rpv || rim || rem || rHashAlgoId || pubRak || rRakHashAlgoId *)
+  let rChallenge = challenge_RMM in 
+  in(c, rpv: bitstring);
+  in(c, rim: bitstring);
+  in(c, rem: bitstring);
+  in(c, rHashAlgoId: bitstring);
+  in(c, rRakHashAlgoId: bitstring);
+  let realmClaims = (rChallenge, rpv, rim, rem, rHashAlgoId, pubRak, rRakHashAlgoId) in  (*Step 3*)
+
+  let rakSig = sign(privRak,realmClaims) in  (*Step 4: signature is over realmClaims*)
+  let realmEvidence = (realmClaims, rakSig) in (*Step 4: signature is over realmClaims*)
+  event SentRealmEvidence(realmClaims); 
+  out (cRmmRealm, (platformEvidence, realmEvidence)).  (*Step 5*)
+  (* cf. Algorithm 11.5, p. 429 [HAC] "Rmm's signature for realmClaims is "signature". Both realmClaims and "signature"
+  are made available to entities which may wish to verify the signature" *)
+
+let Realm() =
+  in (cRealmVerifier, challenge_Realm: bitstring);  (*Step 1*)
+  out (cRmmRealm, challenge_Realm); (*Step 2*)
+  in (cRmmRealm, (platformEvidence_Realm: bitstring, realmEvidence_Realm: bitstring));  (*Step 5*)
+  out (cRealmVerifier, (platformEvidence_Realm, realmEvidence_Realm)).  (*Step 6*)
+
+
+
+let Verifier(pubCpak: VerifyingKey) =
+  new challenge: bitstring;   (*freshly generated challenge*)
+  out (cRealmVerifier, challenge);  (*Step 1*)
+
+  (* check that the Evidence has all the expected fields and have the correct types *)
+  (* platformClaims = pProfile || pChallenge || pImpId || pInstId || pConfig || pLifeCycleState || pImpDef || pSwCompType || pSwCompMeas || pSwCompVer || pSwCompSignerId || pSwCompHashAlgoId || pVer || pHashId *)
+  in (cRealmVerifier, (pProfile_Ver: bitstring, pChallenge_Ver: Hash, pImpId_Ver: bitstring, pInstId_Ver: bitstring, pConfig_Ver: bitstring, pLifeCycleState_Ver: bitstring, pImpDef_Ver: bitstring, pSwCompType_Ver: bitstring, pSwCompMeas_Ver: bitstring, pSwCompVer_Ver: bitstring, pSwCompSignerId_Ver: bitstring, pSwCompHashAlgoId_Ver: bitstring, pVer_Ver: bitstring, pHashId_Ver: bitstring, 
+    cpakSig_Ver: Sign,
+    (* realmClaims = rChallenge || rpv || rim || rem || rHashAlgoId || pubRak || rRakHashAlgoId *)
+    rChallenge_Ver: bitstring, rpv_Ver: bitstring, rim_Ver: bitstring, rem_Ver: bitstring, rHashAlgoId_Ver: bitstring, pubRak_Ver: VerifyingKey, rPubRakHashAlgoId_Ver: bitstring,
+    rakSig_Ver: Sign));  (*Step 6*)
+  let pLifeCycle_Ver = (pLifeCycleState_Ver, pImpDef_Ver) in
+  let pSwComp_Ver = (pSwCompType_Ver, pSwCompMeas_Ver, pSwCompVer_Ver, pSwCompSignerId_Ver, pSwCompHashAlgoId_Ver) in
+  let platformClaims_Ver = (pProfile_Ver, pChallenge_Ver, pImpId_Ver, pInstId_Ver, pConfig_Ver, pLifeCycle_Ver, pSwComp_Ver, pVer_Ver, pHashId_Ver) in
+  let realmClaims_Ver = (rChallenge_Ver, rpv_Ver, rim_Ver, rem_Ver, rHashAlgoId_Ver, pubRak_Ver, rPubRakHashAlgoId_Ver) in 
+  (*Valid Platform verification is a pre-req for the Realm verification*)
+  if pImpId_Ver = pImpIdRef  (* Step 7a *) 
+  && pInstId_Ver = pInstIdRef  (* Step 7b *)
+  && verifySign(pubCpak, platformClaims_Ver, cpakSig_Ver) = true  (*Step 7c (PE3) PE refers to Platform **Evidence** verification step in prose in Sec. 5.5.2*)
+  (* event test; *)
+  && verifySign(pubRak_Ver, realmClaims_Ver, rakSig_Ver) = true  (*Step 7d (PV4)*)
+  && pChallenge_Ver = sha256(pubRak_Ver)  (*Step 7e (PV3) PV refers to Platform Verifier step for **binding** verification in prose in Sec. 5.5.2*)
+  (* If a destructor fails inside M in a test "if M then ...", neither the "then" branch nor the "else" branch of the test are executed. *)
+  (* If a destructor fails in M in "let .. = M in ... else ...", the "else" branch is executed. *)
+  (* In our case the two are equivalent since we have no else branch. *)
+  && rChallenge_Ver = challenge  (*Step 7f: check freshness*)
+
+  && pLifeCycleState_Ver = pLifeCycleStateRef  (* Step 8 *)
+
+  && pSwCompMeas_Ver = pSwCompMeasRef  (* Step 9a *)
+  && pSwCompSignerId_Ver = pSwCompSignerIdRef  (* Step 9b *)
+  && pConfig_Ver = pConfigRef  (* Step 9c *)
+  && pProfile_Ver = pProfileRef  (* Step 9d *)
+  && rim_Ver = rimRef  (* Step 9e *)
+
+  && rpv_Ver = rpvRef  (* Step 10a *)
+  && rem_Ver = remRef  (* Step 10b *) 
+  && pVer_Ver = pVerRef then  (* Step 10c *) 
+  
+  event RealmVerified(platformClaims_Ver, realmClaims_Ver). 
+
+
+(**********************************************************************)
+(* The main system *)
+(**********************************************************************)
+(* process 0 *)
+(*set preciseActions = true. Added for shorter reachability trace (otherwise gives a longer one with 2 instances of Rmm)*)
+
+process
+  (* Provisioning Phase *)
+  new guk: Seed;  (* Group Unique Key *)
+  new huk: Seed;  (* Hardware Unique Key *)
+
+
+  (* Init phase *)
+  (*Derive cpak key-pair: signing key of Hes*)
+  (* LTKs should be executed only once *)
+  in(c, pLifeCycleState: bitstring);
+  let privCpak = kdfCpak (guk, pLifeCycleState) in  (* minimum contributions, implementations may vary*)
+  let pubCpak = pub(privCpak) in 
+  out (c,pubCpak);  
+
+  Hes (privCpak, guk, pLifeCycleState) | RmmInit() | in(cRmmInitMain, (privRak: SigningKey, pubRak: VerifyingKey, platformEvidence: bitstring));
+
+  (* TODO for attested TLS: Should rik key-pair not be part of Realm? multiple sessions of same Realm, or different Realms*)
+
+  (* Attestation protocol phase *)
+  ( !(Rmm(privRak, pubRak, platformEvidence) | Realm()) | (!Verifier(pubCpak)) )
