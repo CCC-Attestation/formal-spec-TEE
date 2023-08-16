@@ -316,7 +316,7 @@ if true then continue
          based on https://api.portal.trustedservices.intel.com/documentation#pcs-enclave-identity-v4
           19fi.  Verify measurements (mrEnc) of TD QE = Reference Value of mrEnc (TODO: does not exist in implementation)
           19fii. Verify hash of ID (mrSigner) of TD QE = Reference Value of mrSigner 
-          19fiii.Verify prodid of TD QE = Reference Value of prodid (always go together with 19dii)
+          19fiii.Verify prodid of TD QE = Reference Value of prodid (always go together with 19fii)
           19fiv. Apply Reference miscMask (binary mask) to misc field in AKcert. 
                  Verify if miscMask & misc = Reference Value of misc (TODO: find important bits here) (SSA Frame extended feature set; SECS.MISCSELECT settings)
           19fv.  Apply Reference attEncMask (binary mask) to attEnc field in AKcert. 
