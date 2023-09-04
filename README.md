@@ -12,12 +12,18 @@ This repo will contain the material for formal specification of _architecturally
 The groups are based on the level of customization possible. 
 
 ## Motivation 
-Attestation is one of the most critical mechanisms of Confidential Computing. Unfortunately, the attestation mechanisms provided by TEEs are quite complex and thus these are not well-understood even by those who call themselves "experts". The project aims at a better understanding of these mechanisms and the underlying trust assumptions via formal specification and verification. These mechanisms can then be composed with transport protocols (e.g., TLS) to build attestation _frameworks_. 
+Attestation is one of the most critical mechanisms of Confidential Computing. Unfortunately, the attestation mechanisms provided by TEEs are quite complex and thus these are not well-understood even by those who call themselves "experts". The project aims at a better understanding of these mechanisms and the underlying trust assumptions via formal specification and verification. These mechanisms can then be composed with transport protocols (e.g., TLS and SPDM) to build attestation _frameworks_. 
 
 ## Main Challenge
 The main challenge is the extraction of the attestation protocol to be formalized, as all the vendors (including Intel, Arm, AMD and IBM) describe the protocols informally. 
 
 ## Approach 
+Our formal models are based on: 
+- in-depth reading of Intel and Arm specification documents
+- our experience with Intel SGX (on which the attestation architecture Intel TDX is largely based)
+- extensive discussions with Intel and Arm 
+
+## Tool 
 We use state-of-the-art symbolic security analysis tool [ProVerif](https://ieeexplore.ieee.org/document/9833653) for the specification of the protocols. 
 
 ## Technical Specifications
@@ -55,7 +61,10 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA | 5 December, 2023 | [TBTL](https://tbtl.com/) |  |
 | [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Looking for sponsors  |  |
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
+| [Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html) | Toronto, Canada | 29 October, 2023 | Looking for sponsors |  |
 | [Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/) | Ames, Iowa, USA | 23-27 October, 2023 | [FMCAD Association](https://fmcad.or.at/) |  |
+| [Confidential Computing Mini Summit (co-located with OSS EU)](https://events.linuxfoundation.org/open-source-summit-europe/features/co-located-events/#confidential-computing-mini-summit) | Bilbao, Spain | 18 September, 2023 | Looking for sponsors |  |
+| CCC SIG Progress update| Virtual | 12 September, 2023 | - | |
 | Research visit at [University of Edinburgh](https://www.ed.ac.uk/) and [Heriot-Watt University](https://www.hw.ac.uk/) | Edinburgh, UK | 11-13 September, 2023 | [EuroProofNet](https://europroofnet.github.io/) |  |
 | [16th Conference on Intelligent Computer Mathematics (CICM)](https://cicm-conference.org/2023/cicm.php?event=&menu=general) | Cambridge, UK (Virtual) | 6 September, 2023 |  |  |
 | [Highlights of Logic, Games and Automata](https://highlights-conference.org/2023/) | Kassel, Germany | 28 July, 2023 | [Secretarium](https://secretarium.com/) |  [slides](https://www.researchgate.net/publication/372746716_Presentation_Comprehensive_Specification_and_Formal_Analysis_of_Attestation_Mechanisms_in_Confidential_Computing)| 
