@@ -63,7 +63,7 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
 | [Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html) | Toronto, Canada | 29 October, 2023 | Looking for sponsors |  |
 | [Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/) | Ames, Iowa, USA | 23-27 October, 2023 | [FMCAD Association](https://fmcad.or.at/) |  |
-| [Confidential Computing Mini Summit (co-located with OSS EU)](https://events.linuxfoundation.org/open-source-summit-europe/features/co-located-events/#confidential-computing-mini-summit) | Bilbao, Spain | 18 September, 2023 | Looking for sponsors |  |
+| [Confidential Computing Mini Summit (co-located with OSS EU)](https://events.linuxfoundation.org/open-source-summit-europe/features/co-located-events/#confidential-computing-mini-summit) | Bilbao, Spain | 18 September, 2023 | [CCC](https://confidentialcomputing.io/) |  |
 | CCC SIG Progress update| Virtual | 12 September, 2023 | - | |
 | Research visit at [University of Edinburgh](https://www.ed.ac.uk/) and [Heriot-Watt University](https://www.hw.ac.uk/) | Edinburgh, UK | 11-13 September, 2023 | [EuroProofNet](https://europroofnet.github.io/) |  |
 | [16th Conference on Intelligent Computer Mathematics (CICM)](https://cicm-conference.org/2023/cicm.php?event=&menu=general) | Cambridge, UK (Virtual) | 6 September, 2023 |  |  |
