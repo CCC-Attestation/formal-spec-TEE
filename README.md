@@ -59,7 +59,7 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA | 5 December, 2023 | [TBTL](https://tbtl.com/) |  |
-| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Looking for sponsors  |  |
+| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [Flashbots](https://www.flashbots.net/); looking for sponsors  |  |
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
 | [Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html) | Toronto, Canada | 29 October, 2023 | Looking for sponsors |  |
 | [Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/) | Ames, Iowa, USA | 23-27 October, 2023 | [FMCAD Association](https://fmcad.or.at/) |  |
