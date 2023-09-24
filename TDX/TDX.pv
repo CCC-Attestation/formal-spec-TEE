@@ -103,12 +103,12 @@ tdr = TDREPORT_STRUCT [source: Intel Trust Domain Extensions (Intel TDX) Module 
     mro = MROWNER
     mroc = MROWNERCONFIG
     rtmr = RTMR
-    TODO = SERVTD_HASH (only for v1.5 feature; both local and remote attestation; exact value match with Ref Value)
+    TODO = SERVTD_HASH (feature for TDX v1.5; both local and remote attestation; exact value match with Ref Value)
     res = RESERVED
 
 *Remote Evidence*
 Quote = TD QUOTE 
-  QuoteHeader 
+  QuoteHeader [TODO]
     Version
     Attestation Key Type
     TEE Type
@@ -145,14 +145,53 @@ Quote = TD QUOTE
   PCKcert ( TODO: precise model with the following fields within PCK cert : Changes in steps: main where PCKcert is formed, step 18, 19aiii (step 16 comments only) )
     [source: Intel® SGX PCK Certificate and Certificate Revocation List Profile Specification, Rev 1.5, January 26, 2022,
     https://api.trustedservices.intel.com/documents/Intel_SGX_PCK_Certificate_CRL_Spec-1.5.pdf]
+    Issue: The specification of order in Appendix A is only for SGX (since no tdxtcbcomponents). Hence for TCB, we are using the example response in https://api.portal.trustedservices.intel.com/documentation#pcs-tcb-info-tdx-v4 below
     pubPCK
     ppid = PPID 
-    sgxTcbComp = SGX TCB Comp 01-16
-    PCESVN = PCESVN 
-    TODO = CPUSVN (Note: CPUSVN also in AKcert.QEReportBody)
+    TODO = TCB
+      sgxTcbComp = sgxtcbcomponents (SGX TCB Comp 01-16)
+        sgxTcbComp1
+        sgxTcbComp2
+        sgxTcbComp3
+        sgxTcbComp4
+        sgxTcbComp5
+        sgxTcbComp6
+        sgxTcbComp7
+        sgxTcbComp8
+        sgxTcbComp9
+        sgxTcbComp10
+        sgxTcbComp11
+        sgxTcbComp12
+        sgxTcbComp13
+        sgxTcbComp14
+        sgxTcbComp15
+        sgxTcbComp16    
+      PCESVN = PCESVN 
+      tdxTcbComp = tdxtcbcomponents (TDX TCB Comp 01-16)
+        tdxTcbComp1
+        tdxTcbComp2
+        tdxTcbComp3
+        tdxTcbComp4
+        tdxTcbComp5
+        tdxTcbComp6
+        tdxTcbComp7
+        tdxTcbComp8
+        tdxTcbComp9
+        tdxTcbComp10
+        tdxTcbComp11
+        tdxTcbComp12
+        tdxTcbComp13
+        tdxTcbComp14
+        tdxTcbComp15
+        tdxTcbComp16
     pceid = PCEID 
     fmspc = FMSPC 
+    TODO = SGX Type
     piid = PIID 
+    TODO = Configuration
+      Dynamic Platform Flag
+      Cached Keys Flag
+      SMT Enabled Flag
     PCAKsig
   ICAcert
     pubPCAK
@@ -160,6 +199,11 @@ Quote = TD QUOTE
   rootcert
     pubIRK
     IRKselfsig
+
+(* Reference Values *)
+TCBcert
+  pubTCBK
+  IRKsig
 
 **********************************************************************
 Initialization Steps (AK certification): 
@@ -291,15 +335,19 @@ if true then continue
       QuoteHeader, QuoteBody and AKsig as generated in step 15 
       AKcert as received in initialization step I7
       PCKcert = pubPCK || sgxTcbComp || PCESVN || PCAKsig 
+        PCAKsig = sign(PCAK, pubPCK || sgxTcbComp || PCESVN) in
       ICAcert = pubPCAK || IRKsig
       rootcert = pubIRK || IRKselfsig
 17. VMM -> TD: Quote 
 18. TD -> Verifier: Quote 
-19. Verifier: Verification of Remote Evidence
+19. Verifier: Cryptographic checks
     19a. Verify X.509 cert chain for attestation (Endorsements)  
       19ai.   Verify authenticity of rootcert in TD Quote using pre-known pubIRK
+              (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/e7604e02331b3377f3766ed3653250e03af72d45/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/PckCertVerifier.cpp#L98-L103)
       19aii.  Verify authenticity of ICAcert in TD Quote using pre-known pubIRK
+              (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/e7604e02331b3377f3766ed3653250e03af72d45/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/PckCertVerifier.cpp#L105-L110)
       19aiii. Verify authenticity of PCKcert in TD Quote using pubPCAK in ICAcert
+              (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/e7604e02331b3377f3766ed3653250e03af72d45/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/PckCertVerifier.cpp#L112-L117)
     19b. Verify custom cert-like structure AKcert in key hierarchy/signature chain
          i.e., verify authenticity of AKcert using pubPCK in PCKcert
                 AKcert = pubAK || QEReportBody || PCKsig || QEauthData
@@ -312,50 +360,64 @@ if true then continue
     19e. Verify integrity of pubTDK in QuoteBody and freshness of Quote
          i.e., check received rdata = computed rdata? [user-defined input, so match the format with sender side]
             rdata as received in Step 18
-    19f. Verify claims of TD QE (in AKcert) against Reference Values based upon policy (TODO: Check signatures before using; clarify signature chain)
+    19f. Verify authenticity of TCBcert using pre-known pubIRK and extract pubTCBK from TCBcert (Endorsements) (TODO)
+          https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/TCBSigningChain.cpp#L90
+          https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/master/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/TCBSigningChain.cpp#L136
+    19g. Verify signatures over TDX TCB Info using pubTCBK (TODO) (https://api.portal.trustedservices.intel.com/documentation#pcs-tcb-info-tdx-v4)
+    19h. Verify signatures over TDX QE Identity using pubTCBK (TODO) (https://api.portal.trustedservices.intel.com/documentation#pcs-enclave-identity-v4)
+20. Verifier: Reference Values check 
+    20a. Verify claims of TD QE (in AKcert) against Reference Values based upon policy
          based on https://api.portal.trustedservices.intel.com/documentation#pcs-enclave-identity-v4
-          19fi.  Verify measurements (mrEnc) of TD QE = Reference Value of mrEnc (TODO: does not exist in implementation)
-          19fii. Verify hash of ID (mrSigner) of TD QE = Reference Value of mrSigner 
-          19fiii.Verify prodid of TD QE = Reference Value of prodid (always go together with 19fii)
-          19fiv. Apply Reference miscMask (binary mask) to misc field in AKcert. 
+          20ai.  Verify hash of ID (mrSigner) of TD QE = Reference Value of mrSigner 
+          20aii. Verify prodid of TD QE = Reference Value of prodid (always go together with 20ai)
+          20aiii.Apply Reference miscMask (binary mask) to misc field in AKcert. 
                  Verify if miscMask & misc = Reference Value of misc (TODO: find important bits here) (SSA Frame extended feature set; SECS.MISCSELECT settings)
-          19fv.  Apply Reference attEncMask (binary mask) to attEnc field in AKcert. 
+          20aiv.  Apply Reference attEncMask (binary mask) to attEnc field in AKcert. 
                  Verify if attEncMask & attEnc = Reference Value of attEnc 
                  modeled only security-relevant checks: attEnc.PROVISIONKEY == 1 && attEnc.DEBUG == 0?
-          19fvi. Verify received QESVN (in AKcert) >= Reference Value of QESVN (TODO: TCB levels similar to 19i)
-    19g. Verify claims of TD in tdi against Reference Values based upon policy
-          19gi.   Verify load-time measurements (mrtd) of TD = Reference Value of mrtd (TD owner = the one who generated the TD and gives to end-user)
+          20av. Verify received QESVN (in AKcert) >= Reference Value of QESVN (TODO: TCB levels similar to 20d)
+    20b. Verify claims of TD in tdi against Reference Values based upon policy
+          20bi.   Verify load-time measurements (mrtd) of TD = Reference Value of mrtd (TD owner = the one who generated the TD and gives to end-user)
                     MRTD is for the TDVF code (match PCR[0]). 
-          19gii.  Verify run-time measurements (rtmr) = Reference Value of rtmr
+          20bii.  Verify run-time measurements (rtmr) = Reference Value of rtmr
                   [Source: Intel® TDX Virtual Firmware Design Guide (Dec. 2022)]
                   • RTMR[0] is typically for the TDVF configuration (match PCR[1,7]).
                   • RTMR[1] is typically for the TD OS loader or kernel (match PCR[4,5]).
                   • RTMR[2] is typically for the OS application (match PCR[8~15]).
                   • RTMR[3] is reserved for special usage only.
-          19giii.  Verify values assigned by the creator of TD
-            19giiia.Verify hash of ID (mro) of TD's owner = Reference Value assigned by the creator of TD (mroRef)
-            19giiib.Verify owner-defined configurations (mroc) = Reference Value assigned by the creator of TD (mrocRef)
-          19giv.  Verify non-owner-defined configurations (mrc), e.g., runtime or OS configuration = Reference Value of mrc
-          19gv.   Verify TD attributes (debug and security-related are actually mandatory) 
-            19gva. Verify all TD Under Debug flags are zero, i.e., tdatt.TUD = false (all software layers, so multiple debug flags)
-            19gvb. Verify all security-relevant flags, i.e., tdatt.SEC, are set as expected
-          19gvi.  Verify XFAM (eXtended Features Available Mask) (* TODO, not typically used, e.g., SCONE does not use it *)
-    19h. Verify measurements of TDX TCB in tcbi against Reference Values based upon policy
-          19hi.   Verify measurement of TDX Module (mrs) in tcbi = Reference Value of mrs
-          19hii.  Verify signer ID of TDX Module (mrss) in tcbi = Reference Value of mrss
-          19hiii. Verify att = Reference Value of att 
-    19i. Verify TDX TCB (SVNs) against Reference Values: (>=) < means vulnerable, so mandatory: 
+          20biii.  Verify values assigned by the creator of TD
+            20biiia.Verify hash of ID (mro) of TD's owner = Reference Value assigned by the creator of TD (mroRef)
+            20biiib.Verify owner-defined configurations (mroc) = Reference Value assigned by the creator of TD (mrocRef)
+          20biv.  Verify non-owner-defined configurations (mrc), e.g., runtime or OS configuration = Reference Value of mrc
+          20bv.   Verify TD attributes (debug and security-related are actually mandatory) 
+            20bva. Verify all TD Under Debug flags are zero, i.e., tdatt.TUD = false (all software layers, so multiple debug flags)
+            20bvb. Verify all security-relevant flags, i.e., tdatt.SEC, are set as expected
+          20bvi.  Verify XFAM (eXtended Features Available Mask) (* TODO, typically not used, e.g., SCONE does not use it *)
+          20bvii. Verify SERVTD_HASH [TODO]
+    20c. Verify measurements of TDX TCB in tcbi against Reference Values based upon policy
+          20ci.   Verify measurement of TDX Module (mrs) in tcbi = Reference Value of mrs
+          20cii.  Verify signer ID of TDX Module (mrss) in tcbi = Reference Value of mrss
+          20ciii. Verify att = Reference Value of att 
+    20d. Verify TDX TCB (SVNs) against Reference Values: (>=) < means vulnerable, so mandatory: 
         order based on https://api.portal.trustedservices.intel.com/documentation#pcs-tcb-info-tdx-v4: 
           SGX TCB Comp SVNs -> PCESVN -> TEE TCB SVN (TDX Module SVN)
-        19i.i.  Check received SGXTCBSVN (in PCKcert) >= Reference Value of SGXTCBSVN (SGX TCB) (component-wise checks 1-16 individually)
-        19i.ii. Check received PCESVN (in PCKcert) >= Reference Value of PCESVN 
-        19i.iii.Check received TDXTCBSVN (in tcbi) >= Reference Value of TDXTCBSVN (TDX TCB) (component-wise: currently only 2 bytes for TDX module SVN, can be extended in future) 
-    19j. Miscellaneous based on policy 
+        20di. Go over the *sorted* collection of "TCB Levels" retrieved from TCB Info starting from the first item on the list:
+                sorting of TCB levels: (most secure first) and then others in order of lower security
+          20dia. Check received SGXTCBSVN (in PCKcert) >= Reference Value of SGXTCBSVN (SGX TCB) (component-wise checks 1-16 individually)
+          (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/6882afad8644c27db162b40994402c8ad2a7fb32/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/QuoteVerifier.cpp#L105)
+          20dib. Check received PCESVN (in PCKcert) >= Reference Value of PCESVN 
+          (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/6882afad8644c27db162b40994402c8ad2a7fb32/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/QuoteVerifier.cpp#L105)
+          20dic. Check received TDXTCBSVN (in QuoteBody.tcbiClaims) >= Reference Value of TDXTCBSVN (TDX TCB) (component-wise index 0-15: currently only 2 bytes for TDX module SVN, can be extended in future) 
+          (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/6882afad8644c27db162b40994402c8ad2a7fb32/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/QuoteVerifier.cpp#L112)
+          Note: ProVerif implementation assumes only one TCB Level for simplicity.
+        20dii. For the selected TCB Level, check received TDXTCBSVN1 (index 1) (in QuoteBody.tcbiClaims) = Reference Value of TDXTCBSVN1 (TDX TCB) (exact match) [TODO]
+    20e. Miscellaneous based on policy 
           TODO: Tolerance for security advisories: received SGXTCBSVN (policy dependent)
-          sorting: (most secure first) and then others 
 
-Note: There is a single CPUSVN used for SGX and TDX. So CPUSVN not required as part of TD QuoteBody. 
-      In experience with SGX, 16 bytes of CPUSVN always correspond to 16 bytes of SGX TCB components (1-16). That's why never checked in implementation.
+Note: There is a single CPUSVN used for SGX and TDX. So CPUSVN is not required as part of TD QuoteBody. 
+      Intel uses a misleading function name "isCpuSvnHigherOrEqual" whereas inside the function, it is actually sgxTcbComp which is checked. 
+      (https://github.com/intel/SGXDataCenterAttestationPrimitives/blob/71557c7d1d869b6bd6f95566c051cbd098549509/QuoteVerification/QVL/Src/AttestationLibrary/src/Verifiers/QuoteVerifier.cpp#L55)
+      In experience with SGX, 16 bytes of CPUSVN always correspond to 16 bytes of SGX TCB components (1-16). That's why CPUSVN is never checked in implementation against a Reference Value.
 
 
 If verification succeeds, then event QuoteVerified(tcbiClaims,tdiClaims,rdata) 
@@ -531,24 +593,24 @@ query pubAK: VerifyingKey;
   event (AKverified(pubAK)) ==> event (AKsent(pubAK)).
 
 
-(* Integrtiy of tcbiClaims and rdata: step 6-19 *)
-query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+(* Integrity of tcbiClaims and rdata: step 6-19 *)
+query tcbiClaims, tdiClaims, rdata: bitstring;
 event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
 event    (CPUsentSMR(tcbiClaims,rdata)).
 
 (*simplified query: integrity of tdiClaims: step 8-19*)
-query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+query tcbiClaims, tdiClaims, rdata: bitstring;
 event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
 event (TDXMsentTDR(tdiClaims)).
 
 (********************************************************)
 (* Freshness Queries *)
 (********************************************************)
-query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+query tcbiClaims, tdiClaims, rdata: bitstring;
   event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==>
   inj-event (CPUsentSMR(tcbiClaims,rdata)).
 
-query tcbiClaims: bitstring, tdiClaims: bitstring, rdata: bitstring;
+query tcbiClaims, tdiClaims, rdata: bitstring;
   event (QuoteVerified(tcbiClaims,tdiClaims,rdata)) ==> 
   inj-event (TDXMsentTDR(tdiClaims)).
 
@@ -565,14 +627,14 @@ query secret MK.
 (* Authentication Queries *)
 (********************************************************)
 (* Authentication of TD QE (Init phase) *)
-query pubAK: VerifyingKey, pubAK_PCE: VerifyingKey;
+query pubAK, pubAK_PCE: VerifyingKey;
   (event(AKverified(pubAK_PCE)) &&
    event(AKsent(pubAK))) ==>
   (pubAK_PCE = pubAK).
 
 
 (* Authentication of TD (Attestation protocol phase) *)
-query pubTDK: VerifyingKey, pubTDK_Ver: VerifyingKey;
+query pubTDK, pubTDK_Ver: VerifyingKey;
   (event(VerIdentity(pubTDK_Ver)) &&
    event(TDidentity(pubTDK))) ==>
   (pubTDK = pubTDK_Ver).
@@ -801,35 +863,34 @@ let Verifier(pubIRK: VerifyingKey, sgxTcbComp1Ref: nat, sgxTcbComp2Ref: nat, sgx
   (* Golden value for public key is the one in the authentic TD Quote *)
   (* If the hash of concatenation match, it means both values match *)
 
-  (* Step 19f *)
-  if (mrEnc_Ver = mrEncRef) then (* Step 19fi mrEnc of TD QE *)  
-  if (mrSigner_Ver = mrSignerRef) then  (* Step 19fii mrSigner of TD QE *)
-  if (prodid_Ver = prodidRef) then (* Step 19fiii prodid of TD QE *)
-  if provKeyFlag_Ver = true && debugFlag_Ver = false then (* Step 19fv *) 
+  (* Step 20a *)
+  if (mrSigner_Ver = mrSignerRef) then  (* Step 20ai mrSigner of TD QE *)
+  if (prodid_Ver = prodidRef) then (* Step 20aii prodid of TD QE *)
+  if provKeyFlag_Ver = true && debugFlag_Ver = false then (* Step 20aiv *) 
   in(c,QESVNRef: nat); 
-  if (QESVN_Ver >= QESVNRef)  (* Step 19fvi: Check QESVN *)
+  if (QESVN_Ver >= QESVNRef)  (* Step 20av: Check QESVN *)
 
-  (* Step 19g *)
-  && (mrtd_Ver = mrtdRef)  (* Step 19gi *)
-  && (rtmr0_Ver = rtmr0Ref)  (* Step 19gii *)
-  && (rtmr1_Ver = rtmr1Ref)  (* Step 19gii *)
-  && (rtmr2_Ver = rtmr2Ref)  (* Step 19gii *)
-  && (rtmr3_Ver = rtmr3Ref)  (* Step 19gii *)
-  && (mro_Ver = mroRef)  (* Step 19giiia *)
-  && (mroc_Ver = mrocRef)  (* Step 19giiib *)
-  && (mrc_Ver = mrcRef)  (* Step 19giv *)
-  && tudFlag_Ver = false  (* Step 19gva *)
-  && secFlag_Ver = true  (* Step 19gvb *)
+  (* Step 20b *)
+  && (mrtd_Ver = mrtdRef)  (* Step 20bi *)
+  && (rtmr0_Ver = rtmr0Ref)  (* Step 20bii *)
+  && (rtmr1_Ver = rtmr1Ref)  (* Step 20bii *)
+  && (rtmr2_Ver = rtmr2Ref)  (* Step 20bii *)
+  && (rtmr3_Ver = rtmr3Ref)  (* Step 20bii *)
+  && (mro_Ver = mroRef)  (* Step 20biiia *)
+  && (mroc_Ver = mrocRef)  (* Step 20biiib *)
+  && (mrc_Ver = mrcRef)  (* Step 20biv *)
+  && tudFlag_Ver = false  (* Step 20bva *)
+  && secFlag_Ver = true  (* Step 20bvb *)
   (* Note: The name secFlagRef cannot be declared with the type 'bool'. Hence, taken as true for reference *)
   (* if secFlag_Ver = secFlagRef then *)
 
-  (* Step 19h *)
-  && (mrs_Ver = mrsRef)  (* Step 19hi *)
-  && (mrss_Ver = mrssRef)  (* Step 19hii *)
-  && (att_Ver = attRef)  (* Step 19hiii *)
+  (* Step 20c *)
+  && (mrs_Ver = mrsRef)  (* Step 20ci *)
+  && (mrss_Ver = mrssRef)  (* Step 20cii *)
+  && (att_Ver = attRef)  (* Step 20ciii *)
   
-  (* Step 19i *)
-  (* Step 19i.i: Check SGXTCBSVN *)
+  (* Step 20d *)
+  (* Step 20di: Check SGXTCBSVN *)
   && (sgxTcbComp1_Ver >= sgxTcbComp1Ref) 
   && (sgxTcbComp2_Ver >= sgxTcbComp2Ref)
   && (sgxTcbComp3_Ver >= sgxTcbComp3Ref)
@@ -847,9 +908,9 @@ let Verifier(pubIRK: VerifyingKey, sgxTcbComp1Ref: nat, sgxTcbComp2Ref: nat, sgx
   && (sgxTcbComp15_Ver >= sgxTcbComp15Ref)
   && (sgxTcbComp16_Ver >= sgxTcbComp16Ref) 
 
-  && (PCESVN_Ver >= PCESVNRef)  (* Step 19i.ii: Check PCESVN *)
+  && (PCESVN_Ver >= PCESVNRef)  (* Step 20dii: Check PCESVN *)
 
-  && (TDXTCBSVN_Ver >= TDXTCBSVNRef) then (* Step 19i.iii: Check TDXTCBSVN *)
+  && (TDXTCBSVN_Ver >= TDXTCBSVNRef) then (* Step 20diii: Check TDXTCBSVN *)
 
   (* pubTDK_Ver is now trustworthy *)
   event QuoteVerified(tcbiClaims_Ver,tdiClaims_Ver,rdata_Ver);
@@ -908,8 +969,6 @@ process
   (* out(c, PCK); *)
 
   new c_QE_CPUinit: channel; (*secure channel; enforced by SoC*)
-  (* new c_QE_CPUinit2: channel; secure channel; enforced by SoC *)
-  (* new c_PCE_QEinit: channel; Private channel  *)
   new c_PCE_CPUinit: channel; (*Private channel*)     
   new c_QE_main: channel; (*Private channel*)
 
@@ -942,8 +1001,12 @@ process
 
   (* Attestation protocol phase  *)
   (*The trace will have the processes in the following order*)
-  ( ! ( new c_QE_CPU: channel; new c_TDX_CPU: channel; new c_TD_TDX: channel;  
-      ( QE(c_QE_CPU,AK,AKcert,PCKcert,ICAcert,rootcert) |  TD(c_TD_TDX) | 
-      TDXModule(c_TD_TDX,c_TDX_CPU) | CPUHardware(c_QE_CPU,c_TDX_CPU,MK)  ) ) |
+  ( ! ( new c_QE_CPU: channel; 
+        new c_TDX_CPU: channel; 
+        new c_TD_TDX: channel;  
+      ( QE(c_QE_CPU, AK, AKcert, PCKcert, ICAcert, rootcert) |  
+      TD(c_TD_TDX) | 
+      TDXModule(c_TD_TDX, c_TDX_CPU) | 
+      CPUHardware(c_QE_CPU, c_TDX_CPU, MK)  ) ) |
   (!Verifier(pub(IRK), sgxTcbComp1Ref, sgxTcbComp2Ref, sgxTcbComp3Ref, sgxTcbComp4Ref, sgxTcbComp5Ref, sgxTcbComp6Ref, sgxTcbComp7Ref, sgxTcbComp8Ref,
     sgxTcbComp9Ref, sgxTcbComp10Ref, sgxTcbComp11Ref, sgxTcbComp12Ref, sgxTcbComp13Ref, sgxTcbComp14Ref, sgxTcbComp15Ref, sgxTcbComp16Ref, PCESVNRef, TDXTCBSVNRef)) )
