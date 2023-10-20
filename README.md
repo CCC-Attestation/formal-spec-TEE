@@ -1,10 +1,9 @@
 # Formal specification of attestation mechanisms in Confidential Computing
 
-This repo will contain the material for formal specification of _architecturally-defined_ remote attestation in the following groups: 
+This repo contains the material for formal specification of _architecturally-defined_ remote attestation in the following groups: 
 
 1. _Vendor solutions_: 
-	- Intel TDX  
-	- AMD SEV-SNP 
+	- Intel TDX 
 
 2. _Architecture lead solutions_: 
 	- Arm CCA
@@ -27,7 +26,7 @@ Our formal models are based on:
 We use state-of-the-art symbolic security analysis tool [ProVerif](https://ieeexplore.ieee.org/document/9833653) for the specification of the protocols. 
 
 ## Technical Specifications
-Authors: Muhammad Usama Sardar, Thomas Fossati and Simon Frost
+Authors: Muhammad Usama Sardar, Thomas Fossati, Simon Frost and Shale Xiong
 - [Draft1](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) focusing on TEE-agnostic architecture
 - Draft2 (coming soon) focusing on formal specification and verification
 
@@ -49,7 +48,6 @@ Complementary approaches and tools (e.g., [CryptoVerif](https://bblanche.gitlabp
 ## Acknowledgments
 We would like to thank the following for insightful discussions and helpful feedback.
 - Nikolaus Thümmel (Scontain)
-- Shale Xiong (Arm)
 - Ante Derek (Univeristy of Zagreb)
 - Jiewen Yao (Intel)
 
@@ -59,10 +57,10 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA | 5 December, 2023 | [TBTL](https://tbtl.com/) |  |
-| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [Flashbots](https://www.flashbots.net/); looking for sponsors  |  |
+| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [TBTL](https://tbtl.com/) and [Flashbots](https://www.flashbots.net/); looking for sponsors  |  |
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
-| [Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html) | Toronto, Canada | 29 October, 2023 | Looking for sponsors |  |
-| [Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/) | Ames, Iowa, USA | 23-27 October, 2023 | [FMCAD Association](https://fmcad.or.at/) |  |
+| ~~[Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html)~~ | ~~Toronto, Canada~~ | ~~29 October, 2023~~ | - | Visa delayed |
+| ~~[Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/)~~ | ~~Ames, Iowa, USA~~ | ~~23-27 October, 2023~~ | ~~[FMCAD Association](https://fmcad.or.at/)~~ | Visa delayed |
 | [Confidential Computing Mini Summit (co-located with OSS EU)](https://events.linuxfoundation.org/open-source-summit-europe/features/co-located-events/#confidential-computing-mini-summit) | Bilbao, Spain | 18 September, 2023 | [CCC](https://confidentialcomputing.io/) | [slides](https://www.researchgate.net/publication/374002611_Presentation_Formal_Specification_and_Verification_of_Attestation_in_Confidential_Computing)  |
 | CCC SIG Progress update| Virtual | 12 September, 2023 | - | [slides](https://www.researchgate.net/publication/373873503_Presentation_Formal_Specification_and_Verification_of_Architecturally-defined_Attestation_in_Confidential_Computing) |
 | Research visit at [University of Edinburgh](https://www.ed.ac.uk/) and [Heriot-Watt University](https://www.hw.ac.uk/) | Edinburgh, UK | 11-13 September, 2023 | [EuroProofNet](https://europroofnet.github.io/) | - |
