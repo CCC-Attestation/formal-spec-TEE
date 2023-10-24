@@ -57,9 +57,9 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA | 5 December, 2023 | [TBTL](https://tbtl.com/) |  |
-| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [TBTL](https://tbtl.com/) and [Flashbots](https://www.flashbots.net/); looking for sponsors  |  |
-| [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) |  |
-| ~~[Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html)~~ | ~~Toronto, Canada~~ | ~~29 October, 2023~~ | - | Visa delayed |
+| [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [TBTL](https://tbtl.com/); looking for sponsors  |  |
+| [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) (Mini-project) |  |
+| [Hardware and Architectural Support for Security and Privacy (HASP) 2023](https://www.haspworkshop.org/2023/index.html) | Toronto, Canada (Virtual) | 29 October, 2023 | [Flashbots](https://www.flashbots.net/) |  |
 | ~~[Formal Methods in Computer-Aided Design (FMCAD) 2023](https://fmcad.org/FMCAD23/)~~ | ~~Ames, Iowa, USA~~ | ~~23-27 October, 2023~~ | ~~[FMCAD Association](https://fmcad.or.at/)~~ | Visa delayed |
 | [Confidential Computing Mini Summit (co-located with OSS EU)](https://events.linuxfoundation.org/open-source-summit-europe/features/co-located-events/#confidential-computing-mini-summit) | Bilbao, Spain | 18 September, 2023 | [CCC](https://confidentialcomputing.io/) | [slides](https://www.researchgate.net/publication/374002611_Presentation_Formal_Specification_and_Verification_of_Attestation_in_Confidential_Computing)  |
 | CCC SIG Progress update| Virtual | 12 September, 2023 | - | [slides](https://www.researchgate.net/publication/373873503_Presentation_Formal_Specification_and_Verification_of_Architecturally-defined_Attestation_in_Confidential_Computing) |
