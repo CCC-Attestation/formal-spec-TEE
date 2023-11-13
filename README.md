@@ -27,11 +27,12 @@ We use state-of-the-art symbolic security analysis tool [ProVerif](https://ieeex
 
 ## Technical Specifications
 Authors: Muhammad Usama Sardar, Thomas Fossati, Simon Frost and Shale Xiong
-- [Draft1](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) focusing on TEE-agnostic architecture
-- Draft2 (coming soon) focusing on formal specification and verification
+- [Draft](https://www.researchgate.net/publication/367284929_SoK_Attestation_in_Confidential_Computing) focusing on TEE-agnostic architecture
+- [Paper](https://www.researchgate.net/publication/375592777_Formal_Specification_and_Verification_of_Architecturally-defined_Attestation_Mechanisms_in_Arm_CCA_and_Intel_TDX) focusing on formal specification and verification
 
 ## Important results
 - We formally prove the insecurity of the TCB claimed by Intel for TDX. This was reported to Intel and fixed in the latest specs. 
+- We formally prove that architecturally-defined attestation does not provide authentication property. 
 - We also noticed a suspicious activity where Intel updates all the TDX white papers and specifications on the same URLs (with the older version of specs just disappearing). We reported this to Intel privately and later [publicly](https://lists.confidentialcomputing.io/g/attestation/topic/full_transparency_of_intel/99387880). 
 
 ## Use cases 
@@ -50,6 +51,27 @@ We would like to thank the following for insightful discussions and helpful feed
 - Nikolaus Thümmel (Scontain)
 - Ante Derek (Univeristy of Zagreb)
 - Jiewen Yao (Intel)
+
+## Running automatic proofs 
+1. Install the latest version of ProVerif: see https://bblanche.gitlabpages.inria.fr/proverif/ for details
+
+2a. Run as follows: 
+
+`proverif <filename>.pv`
+
+For TDX: `proverif TDX/TDX.pv`
+
+For CCA: `proverif CCA/ArmCCA_RA.pv`
+
+2b. In order to additionally generate a trace for each property which results in "false", create a subfolder for results before executing.
+
+Then to execute: run as follows:
+`proverif -graph <subfolderNameForResults> <filename>.pv`
+
+Subfolder will contain the traces in .dot as well as .PDF.
+
+2c. To run in interactive mode:
+`proverif_interact <filename>.pv`
 
 ## Recent and Upcoming Talks and Research Visits
 If you are around on any of the following venues of upcoming talks (in reverse chronological order) on the project, you are very welcome to join/meet. 
