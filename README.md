@@ -1,11 +1,11 @@
-# Formal specification of attestation mechanisms in Confidential Computing
+# Formal Specification and Verification of Architecturally-Defined Attestation Mechanisms in Confidential Computing
 
-This repo contains the material for formal specification of _architecturally-defined_ remote attestation in the following groups: 
+This repo contains the material for formal specification and verification of _architecturally-defined_ remote attestation in the following groups: 
 
 1. _Vendor solutions_: 
 	- Intel TDX 
 
-2. _Architecture lead solutions_: 
+2. _Architecture led solutions_: 
 	- Arm CCA
 
 The groups are based on the level of customization possible. 
@@ -14,16 +14,35 @@ The groups are based on the level of customization possible.
 Attestation is one of the most critical mechanisms of Confidential Computing. Unfortunately, the attestation mechanisms provided by TEEs are quite complex and thus these are not well-understood even by those who call themselves "experts". The project aims at a better understanding of these mechanisms and the underlying trust assumptions via formal specification and verification. These mechanisms can then be composed with transport protocols (e.g., TLS and SPDM) to build attestation _frameworks_. 
 
 ## Main Challenge
-The main challenge is the extraction of the attestation protocol to be formalized, as all the vendors (including Intel, Arm, AMD and IBM) describe the protocols informally. 
+The main challenge is the extraction of the attestation protocol to be formalized, as all the vendors (including Intel, Arm[^1], AMD and IBM) describe the attestation protocols informally. 
 
 ## Approach 
 Our formal models are based on: 
 - in-depth reading of Intel and Arm specification documents
-- our experience with Intel SGX (on which the attestation architecture Intel TDX is largely based)
+- our experience with Intel SGX (on which the attestation architecture of Intel TDX is largely based)
 - extensive discussions with Intel and Arm 
 
 ## Tool 
 We use state-of-the-art symbolic security analysis tool [ProVerif](https://ieeexplore.ieee.org/document/9833653) for the specification of the protocols. 
+
+## Scientific Publication
+[The work is published](https://ieeexplore.ieee.org/document/10373038) at open-access journal IEEE Access and should be cited as follows: 
+
+> M. U. Sardar, T. Fossati, S. Frost, S. Xiong, Formal Specification and Verification of Architecturally-defined Attestation Mechanisms in Arm CCA and Intel TDX, IEEE Access, 2024.
+
+BibTeX:
+```
+@ARTICLE{Sardar2024CcaTdx,
+  author={Sardar, Muhammad Usama and Fossati, Thomas and Frost, Simon and Xiong, Shale},
+  journal={IEEE Access}, 
+  title = {{Formal Specification and Verification of Architecturally-defined Attestation Mechanisms in Arm CCA and Intel TDX}},
+  year={2024},
+  volume={12},
+  number={},
+  pages={361-381},
+  doi={10.1109/ACCESS.2023.3346501}
+}
+```
 
 ## Technical Specifications
 Authors: Muhammad Usama Sardar, Thomas Fossati, Simon Frost and Shale Xiong
@@ -73,7 +92,7 @@ Subfolder will contain the traces in .dot as well as .PDF.
 2c. To run in interactive mode:
 `proverif_interact <filename>.pv`
 
-## Recent and Upcoming Talks and Research Visits
+## Recent Talks and Research Visits
 If you are around on any of the following venues of upcoming talks (in reverse chronological order) on the project, you are very welcome to join/meet. 
 
 | Event/Host | Venue | Date(s) | Funding | Material |
@@ -105,3 +124,8 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 
 ## Feedback/Comments/Critique/Contributions
 We would love to have your feedback (especially critique! yes, this is how the science progresses, but please be genuine!) and contributions. Contact [Muhammad Usama Sardar](https://tu-dresden.de/ing/informatik/sya/se/die-professur/beschaeftigte/muhammad-usama-sardar) on CCC Slack Workspace, or by email, or open an issue. 
+
+## Notes
+
+[^1]:
+     Arm has internally [verified](https://dl.acm.org/doi/10.1145/3586040) the security and safety properties of both the specification and a prototype implementation of the RMM using HOL4 theorem prover and CBMC model checker. However, this work does not cover attestation mechanisms.
