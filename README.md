@@ -55,15 +55,16 @@ Authors: Muhammad Usama Sardar, Thomas Fossati, Simon Frost and Shale Xiong
 - [Paper](https://www.researchgate.net/publication/375592777_Formal_Specification_and_Verification_of_Architecturally-defined_Attestation_Mechanisms_in_Arm_CCA_and_Intel_TDX) focusing on formal specification and verification
 
 ## Important results
-- We formally prove the insecurity of the TCB claimed by Intel for TDX. This was reported to Intel and fixed in the latest specs. 
+- We formally prove the insecurity of the TCB claimed by Intel for TDX (see [here](https://web.archive.org/web/20230115222916/https://cdrdv2-public.intel.com/690419/TDX-Whitepaper-30Aug2021.pdf)). This was reported to Intel and fixed in the latest specs. 
 - We formally prove that architecturally-defined attestation does not provide authentication property. 
-- The lead author (Muhammad Usama Sardar) noticed the lack of transparency in Intel's documentation process for TDX where Intel updates all the TDX white papers and specifications on the same URLs (with the older version of specs just disappearing). He reported this to Intel privately and later [publicly](https://lists.confidentialcomputing.io/g/attestation/topic/full_transparency_of_intel/99387880) in June 2023. Unfortunately, nothing has changed in these processes, as a couple of evidences from WayBackMachine show that the last changes were made in November and December on the same URLs:
+- The lead author (Muhammad Usama Sardar) noticed the lack of transparency in Intel's documentation process for TDX where Intel updates all the TDX white papers and specifications on the same URLs (with the older version of specs just disappearing), e.g., [Intel TDX white paper](https://web.archive.org/web/20230000000000*/https://cdrdv2.intel.com/v1/dl/getContent/690419) and [TDX Module base specs](https://web.archive.org/web/20230515000000*/https://www.intel.com/content/dam/develop/external/us/en/documents/intel-tdx-module-1.5-base-spec-348549001.pdf). He reported this to Intel privately and later [publicly](https://lists.confidentialcomputing.io/g/attestation/topic/full_transparency_of_intel/99387880) in June 2023. 
 
-[Intel TDX white paper](https://web.archive.org/web/20230000000000*/https://cdrdv2.intel.com/v1/dl/getContent/690419)
-![alt text](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/TDX/Screenshot%20from%202024-02-06%2015-50-19.png?raw=true)
+<!---
+# ![alt text](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/TDX/Screenshot%20from%202024-02-06%2015-50-19.png?raw=true)
 
-[TDX Module base specs](https://web.archive.org/web/20230515000000*/https://www.intel.com/content/dam/develop/external/us/en/documents/intel-tdx-module-1.5-base-spec-348549001.pdf) 
-![alt text](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/TDX/Screenshot%20from%202024-02-06%2015-51-14.png?raw=true)
+# 
+# ![alt text](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/TDX/Screenshot%20from%202024-02-06%2015-51-14.png?raw=true)
+--->
 
 ## Use cases 
 - See [another interesting project](https://github.com/CCC-Attestation/attested-tls-poc) where our artifacts for Arm CCA are being used as a foundation for the formal verification of a specific proposal of composition of remote attestation and transport protocols (see corresponding [IETF draft](https://datatracker.ietf.org/doc/draft-fossati-tls-attestation/)).
