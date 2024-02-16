@@ -101,7 +101,20 @@ Then to execute: run as follows:
 
 Subfolder will contain the traces in .dot as well as .PDF.
 
-2c. To run in interactive mode:
+2c. To additionally see the Horn clauses generated in ProVerif: 
+
+2ci. use command-line option `-test` as follows: 
+`proverif <filename>.pv -test`
+
+OR 
+
+2cii. add one of the following two settings inside the input (*.pv) file:
+
+- `set verboseClauses = short.` to display the Horn clauses
+
+- `set verboseClauses = explained.` to additionally display a sentence after each clause it generates to explain where this clause comes from.
+
+2d. To run in interactive mode:
 `proverif_interact <filename>.pv`
 
 ## Recent Talks and Research Visits
