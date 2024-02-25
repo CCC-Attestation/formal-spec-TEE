@@ -56,7 +56,8 @@ Authors: Muhammad Usama Sardar, Thomas Fossati, Simon Frost and Shale Xiong
 
 ## Important results
 - We formally prove the insecurity of the TCB claimed by Intel for TDX (see [here](https://web.archive.org/web/20230115222916/https://cdrdv2-public.intel.com/690419/TDX-Whitepaper-30Aug2021.pdf)). This was reported to Intel and fixed in the latest specs. 
-- We formally prove that architecturally-defined attestation does not provide authentication property. 
+- We formally prove that architecturally-defined attestation does not provide authentication property.
+- Ambiguities found during the process of formalization in Arm's and Intel's specification of CCA and TDX attestation are summarized in Sections III.H and IV.H (plus Appendix A), respectively, in the [paper](https://ieeexplore.ieee.org/document/10373038). These have been reported to the respective vendors. 
 - The lead author (Muhammad Usama Sardar) noticed the lack of transparency in Intel's documentation process for TDX where Intel updates all the TDX white papers and specifications on the same URLs (with the older version of specs just disappearing), e.g., [Intel TDX white paper](https://web.archive.org/web/20230000000000*/https://cdrdv2.intel.com/v1/dl/getContent/690419) and [TDX Module base specs](https://web.archive.org/web/20230515000000*/https://www.intel.com/content/dam/develop/external/us/en/documents/intel-tdx-module-1.5-base-spec-348549001.pdf). He reported this to Intel privately and later [publicly](https://lists.confidentialcomputing.io/g/attestation/topic/full_transparency_of_intel/99387880) in June 2023. 
 
 <!---
@@ -84,9 +85,15 @@ We would like to thank the following for insightful discussions and helpful feed
 - Jiewen Yao (Intel)
 
 ## Running automatic proofs 
-1. Install the latest version of ProVerif: see https://bblanche.gitlabpages.inria.fr/proverif/ for details
+### Installing ProVerif
+Install the latest version (2.05 at the moment) of ProVerif: see https://bblanche.gitlabpages.inria.fr/proverif/ for details.
+See Section 1.4 of [manual](https://bblanche.gitlabpages.inria.fr/proverif/manual.pdf) for installation options:
+- via OPAM: Section 1.4.1
+- from sources: Section 1.4.2
+- from binaries: Section 1.4.3
 
-2a. Run as follows: 
+### Formal Analysis of Attestation
+1. Run as follows: 
 
 `proverif <filename>.pv`
 
@@ -94,34 +101,35 @@ For TDX: `proverif TDX/TDX.pv`
 
 For CCA: `proverif CCA/ArmCCA_RA.pv`
 
-2b. In order to additionally generate a trace for each property which results in "false", create a subfolder for results before executing.
+2. **Generation of traces for failing properties**: In order to additionally generate a trace for each property which results in "false", create a subfolder for results before executing.
 
 Then to execute: run as follows:
 `proverif -graph <subfolderNameForResults> <filename>.pv`
 
 Subfolder will contain the traces in .dot as well as .PDF.
 
-2c. To additionally see the Horn clauses generated in ProVerif: 
+3. **Horn clauses**: To additionally see the Horn clauses generated in ProVerif: 
 
-2ci. use command-line option `-test` as follows: 
+3a. use command-line option `-test` as follows: 
 `proverif <filename>.pv -test`
 
 OR 
 
-2cii. add one of the following two settings inside the input (*.pv) file:
+3b. add one of the following two settings inside the input (*.pv) file:
 
 - `set verboseClauses = short.` to display the Horn clauses
 
 - `set verboseClauses = explained.` to additionally display a sentence after each clause it generates to explain where this clause comes from.
 
-2d. To run in interactive mode:
+4. **Interactive mode**: To run in interactive mode:
 `proverif_interact <filename>.pv`
 
-## Recent Talks and Research Visits
+## Upcoming and Recent Talks and Research Visits
 If you are around on any of the following venues of upcoming talks (in reverse chronological order) on the project, you are very welcome to join/meet. 
 
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
+| [NSA Symposium on Hot Topics in the Science of Security (HotSoS) 2024](https://cps-vo.org/group/hotsos) | Virtual | 2-4 April, 2024 | - |  |
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA (virtual) | 5 December, 2023 | [TBTL](https://tbtl.com/) | [slides](https://www.researchgate.net/publication/376307777_Presentation_Towards_Formal_Specification_and_Verification_of_Attestation_in_Arm_CCA_and_Intel_TDX_PAVeTrust%2723_sponsored_by) |
 | [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [TBTL](https://tbtl.com/); looking for sponsors  | [slides](https://www.researchgate.net/publication/375991694_Presentation_Perspicuity_of_Attestation_Mechanisms_in_Confidential_Computing)  |
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) (Mini-project) | [slides](https://datatracker.ietf.org/meeting/118/materials/slides-118-rats-formal-specification-of-attestation-in-confidential-computing-01) |
