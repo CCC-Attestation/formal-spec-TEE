@@ -91,6 +91,7 @@ See Section 1.4 of [manual](https://bblanche.gitlabpages.inria.fr/proverif/manua
 - via OPAM: Section 1.4.1
 - from sources: Section 1.4.2
 - from binaries: Section 1.4.3
+or simply try the provided [script](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/installProVerif.sh). 
 
 ### Formal Analysis of Attestation
 1. Run as follows: 
