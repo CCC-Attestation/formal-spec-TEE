@@ -89,9 +89,8 @@ We would like to thank the following for insightful discussions and helpful feed
 Install the latest version (2.05 at the moment) of ProVerif: see https://bblanche.gitlabpages.inria.fr/proverif/ for details.
 See Section 1.4 of [manual](https://bblanche.gitlabpages.inria.fr/proverif/manual.pdf) for installation options:
 - via OPAM: Section 1.4.1
-- from sources: Section 1.4.2
-- from binaries: Section 1.4.3
-or simply try the provided [script](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/installProVerif.sh). 
+- from sources: Section 1.4.2 or simply try the provided [script](https://github.com/CCC-Attestation/formal-spec-TEE/blob/main/installProVerif.sh)
+- from binaries: Section 1.4.3 
 
 ### Formal Analysis of Attestation
 1. Run as follows: 
