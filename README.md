@@ -129,7 +129,7 @@ If you are around on any of the following venues of upcoming talks (in reverse c
 
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
-| [NSA Symposium on Hot Topics in the Science of Security (HotSoS) 2024](https://cps-vo.org/group/hotsos) | Virtual | 2-4 April, 2024 | - |  |
+| [NSA Symposium on Hot Topics in the Science of Security (HotSoS) 2024](https://cps-vo.org/group/hotsos) | Virtual | 3 April, 2024 | - | [slides](https://sos-vo.org/sites/sos-vo.org/files/2024-04/Usama_HotSoS2024_Presentation.pdf) [video](https://youtu.be/19qREfmk29c) |
 | [Program Analysis and Verification on Trusted Platforms (PAVeTrust) 2023](https://www.acsac.org/2023/workshops/pavetrust/) | Austin, Texas, USA (virtual) | 5 December, 2023 | [TBTL](https://tbtl.com/) | [slides](https://www.researchgate.net/publication/376307777_Presentation_Towards_Formal_Specification_and_Verification_of_Attestation_in_Arm_CCA_and_Intel_TDX_PAVeTrust%2723_sponsored_by) |
 | [24th International Conference on Formal Engineering Methods (ICFEM 2023)](https://formal-analysis.com/icfem/2023/) | Brisbane, Australia | 21-24 November, 2023 | Partly by [TBTL](https://tbtl.com/); looking for sponsors  | [slides](https://www.researchgate.net/publication/375991694_Presentation_Perspicuity_of_Attestation_Mechanisms_in_Confidential_Computing)  |
 | [IETF 118](https://www.ietf.org/how/meetings/118/) | Prague, Czechia | 4-10 November, 2023 | [CPEC](https://www.perspicuous-computing.science/) (Mini-project) | [slides](https://datatracker.ietf.org/meeting/118/materials/slides-118-rats-formal-specification-of-attestation-in-confidential-computing-01) |
