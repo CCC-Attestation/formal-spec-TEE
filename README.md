@@ -23,7 +23,14 @@ The main challenge is the extraction of the attestation protocol to be formalize
 
 ## Approach 
 Our formal models are based on: 
-- in-depth reading of Intel and Arm specification documents
+- in-depth reading of Intel and Arm specification documents, mainly:
+	- Arm CCA
+ 		- RME System Architecture (Document number ARM DEN 0129, version A.d, release date 12 October 2022)
+   		- RMM Spec (Document number ARM DEN 0137, version 1.0-eac2, release date 7 June 2023)
+   - Intel TDX
+   		- [Intel TDX white paper](https://web.archive.org/web/20230115222916/https://cdrdv2-public.intel.com/690419/TDX-Whitepaper-30Aug2021.pdf)
+		- Architecture Specification: Intel Trust Domain Extensions Module (Order Number: 344425-004US, pp. 1–316, June 2022)
+		- Intel SGX PCK Certificate and Certificate Revocation List Profile Specification (Revision 1.5, 6 January 2022)	 
 - our experience with Intel SGX (on which the attestation architecture of Intel TDX is largely based)
 - extensive discussions with Intel and Arm 
 
