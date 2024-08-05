@@ -1,0 +1,11 @@
+(* Private Authentication
+
+  Assymmetric encryption
+
+  B only want to talk to A
+  A -> B :  { (na, pkA) }_pkB   na fresh, B Checks that pkA is the public key of A
+  B -> A :  { (na, nb, pkB) }_pkA    if the checks passed (nb fresh)
+            { nb }_pkB               otherwise
+
+  Show that this protocol preserves the anonymity of the Initiator
+*)

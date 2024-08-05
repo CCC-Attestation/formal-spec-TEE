@@ -1,0 +1,111 @@
+(*** Needham Schroeder protocol with randomized assymetric encryption ***)
+
+(*
+  We consider a randomized asymetric encryption/decryption:
+    - Each time we encrypt with the same public key and same plain text, we obtain
+      a different cipher
+    - Decrypting with the secret key gives the plain text
+
+  Description of the protocol:
+    A -> B : { (na, pkA) }_pkB    na fresh
+    B -> A : { (na,nb) }_pkA      nb fresh, A checks that na is the one he created
+    A -> B : { nb }_pkB           A checks that nb is the one he created
+
+  Secrecy of nb
+  Authentication:
+    - If Initiator finished receiving nb then the correct honest receiver created nb
+    - If Receiver finished receiving na then the correct honest initiator created na
+
+  1) How to model a scenario that captures:
+    - Unbounded number of agents
+    - Anyone may talk to anyone
+    - The attacker can participate
+
+  2) Create the two mutual authentication queries
+
+  3) Implement the Needham Schroeder Lowe variant where the second step is replaced 
+  by the following:
+    B -> A : { (na,nb,pkB) }_pkA  nb fresh, A checks that na is the one he created
+  
+*)
+
+(* Types Declarations *)
+
+type rand.    (* Random in the encryption *)
+type pkey.    (* Public key *)
+type skey.    (* Secret key *)
+type cipher.  (* The cipher produced by an encryption *)
+
+(* Declarations of functions, equational theories and rewrite rules *)
+
+fun pk(skey):pkey.
+fun encrypt(bitstring,rand,pkey):cipher.
+fun decrypt(cipher,skey):bitstring
+reduc
+  forall m:bitstring, k:skey, r:rand;
+    decrypt(encrypt(m,r,pk(k)),k) = m.
+
+  (* WRITE HERE *)
+
+letfun enc(x:bitstring,k:pkey) = new r:rand; encrypt(x,r,k).
+
+(* Declarations of constants and names *)
+
+free c:channel.
+
+(* Other declarations *)
+
+(* Event for secrecy *)
+
+event SecrecyTarget(bitstring).
+
+(* Events for authentication *)
+
+  (* WRITE HERE (hint - 4 events to declare, two per authentication query) *)
+
+(* Sanity events *)
+
+event SanityI.
+event SanityR.
+
+(* Declarations of the processes for each role. *)
+
+(* To parse a tuple, use the construct:
+    let (x1:ty1,...,xn:tyn) = t in
+    ...
+*)
+
+let Initiator(skA:skey,pkB:pkey) =
+  new na:bitstring;
+  out(c,enc((na,pk(skA)),pkB));
+
+  in(c,x:cipher);
+  let (na':bitstring,nb:bitstring) = decrypt(x,skA) in
+  if na = na' then
+  out(c,enc(nb,pkB));
+  event SanityI
+.
+
+let Receiver(skB:skey) =
+  (* WRITE HERE *)
+
+  event SanityR
+.
+
+(* Declaration of the security properties *)
+
+query nb:bitstring; event(SecrecyTarget(nb)) && attacker(nb).
+
+(* WRITE Authentication property *)
+
+(* Sanity checks *)
+query s:bitstring; event(SecrecyTarget(s)).
+query event(SanityI).
+query event(SanityR).
+
+(* The main system - CHANGE *)
+process
+  new skA:skey;
+  new skB:skey;
+  out(c,(pk(skA),pk(skB)));
+  (!Initiator(skA,pk(skB)) | !Receiver(skB))

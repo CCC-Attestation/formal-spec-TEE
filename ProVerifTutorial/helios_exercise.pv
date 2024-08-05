@@ -1,0 +1,26 @@
+(* Helios voting protocol
+
+  - Randomized assymetric encryption {v}_pkB^r  (with random r)
+  - Signature
+
+  We consider only three voters (A,B,C) with C compromised.
+
+  S -> V : r     (r is a random)
+  V -> B : [ { v }_pkB^(r,r') ]_skA   r' fresh
+
+  B receives all the votes, checks the signature of each of them,
+  decrypt them and output them in parallel (to mix them).
+
+  We want to prove vote privacy.
+
+  TODO :
+    1) Model the primitives necessary
+    2) Model the processes
+    3) Express the vote privacy property.
+    4) ProVerif should not be able to prove it.
+      Extract from it a possible attack
+    5) Model that the server does not allow dupplicate ballots
+    6) Prove vote privacy
+    7) How would you model the protocol for unbounded number of voter ?
+       How would you model revote ?
+*)
