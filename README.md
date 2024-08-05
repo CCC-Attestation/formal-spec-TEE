@@ -124,8 +124,20 @@ OR
 4. **Interactive mode**: To run in interactive mode:
 `proverif_interact <filename>.pv`
 
-## Upcoming and Recent Talks and Research Visits
-If you are around on any of the following venues of upcoming talks (in reverse chronological order) on the project, you are very welcome to join/meet. 
+
+## ProVerif Tutorial
+[Vincent Cheval](https://www.cs.ox.ac.uk/people/vincent.cheval/) recently gave a nice tutorial on ProVerif at [EuroProofNet event](https://europroofnet.github.io/wg3-dresden24/). 
+
+- [Video](https://youtu.be/22PSUgnKDr0)
+- [Slides](https://europroofnet.github.io/_pages/WG3/Dresden24/Slides/27-02-Vincent-Cheval.pdf)
+- Exercises
+	- [Needham Schroeder protocol](./ProVerifTutorial/NeedhamSchroeder_exercise.pv)
+ 	- [Helios voting protocol](./ProVerifTutorial/NeedhamSchroeder_exercise.pv)
+  	- [Private Authentication](./ProVerifTutorial/private_authentication_exercise.pv)
+  	- [Yubikey protocol](./ProVerifTutorial/yubikey_exercise.pv)	 
+
+## Talks and Research Visits
+Here is a list of talks and research visits (in reverse chronological order) on the project. 
 
 | Event/Host | Venue | Date(s) | Funding | Material |
 | --- | --- | --- | --- | --- |
