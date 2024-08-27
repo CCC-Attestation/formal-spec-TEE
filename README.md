@@ -139,7 +139,7 @@ OR
 - [Slides](https://europroofnet.github.io/_pages/WG3/Dresden24/Slides/27-02-Vincent-Cheval.pdf)
 - Exercises
 	- [Needham Schroeder protocol](./ProVerifTutorial/NeedhamSchroeder_exercise.pv)
- 	- [Helios voting protocol](./ProVerifTutorial/NeedhamSchroeder_exercise.pv)
+ 	- [Helios voting protocol](./ProVerifTutorial/helios_exercise.pv)
   	- [Private Authentication](./ProVerifTutorial/private_authentication_exercise.pv)
   	- [Yubikey protocol](./ProVerifTutorial/yubikey_exercise.pv)	 
 
