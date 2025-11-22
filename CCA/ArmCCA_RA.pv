@@ -226,7 +226,7 @@ fun kdfRak ((*guk=*)Seed, (*pSwComp=*)bitstring, (*pLifeCycleState=*)bitstring):
 free c: channel.  (* general public channel *)
 free cHesRmm: channel [private].      (* see assumption a *)
 free cRmmInitMain: channel [private].      (* to pass from RMMInit to main *)
-free cRmmRealm: channel [private].  (* public channel between Rmm and Realm *)
+free cRmmRealm: channel [private].  (* private channel between Rmm and Realm *)
 free cRealmVerifier: channel.  (* public channel between Realm and Verifier *)
 
 (* Verification Collateral: Reference Values *)
